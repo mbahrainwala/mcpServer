@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:lmstudio.ai)",
+      "WebFetch(domain:www.baeldung.com)",
+      "WebFetch(domain:www.sohamkamani.com)",
+      "WebFetch(domain:mvnrepository.com)",
+      "Bash(mvn clean:*)",
+      "Bash(ls -la /c/dev/workspace/llmStudioMcp/target/*.jar 2>/dev/null || echo \"JAR not built yet\")",
+      "Bash(ps aux:*)",
+      "Bash(jar tf:*)",
+      "Bash(mvn package:*)"
+    ]
+  }
+}
