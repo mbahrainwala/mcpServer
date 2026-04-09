@@ -11,7 +11,8 @@
       "Bash(ps aux:*)",
       "Bash(jar tf:*)",
       "Bash(mvn package:*)",
-      "Bash(mvn compile:*)"
+      "Bash(mvn compile:*)",
+      "Bash(mvn test:*)"
     ]
   }
 }
