@@ -41,7 +41,9 @@ public class McpServerConfig {
             BiologyTool biologyTool,
             // Excel tools
             ExcelFormulaTool excelFormulaTool,
-            ExcelDataTool excelDataTool) {
+            ExcelDataTool excelDataTool,
+            // Document tools
+            PdfTool pdfTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
@@ -64,7 +66,8 @@ public class McpServerConfig {
                         chemistryTool,
                         biologyTool,
                         excelFormulaTool,
-                        excelDataTool
+                        excelDataTool,
+                        pdfTool
                 )
                 .build();
     }

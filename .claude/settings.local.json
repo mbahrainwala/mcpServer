@@ -10,7 +10,8 @@
       "Bash(ls -la /c/dev/workspace/llmStudioMcp/target/*.jar 2>/dev/null || echo \"JAR not built yet\")",
       "Bash(ps aux:*)",
       "Bash(jar tf:*)",
-      "Bash(mvn package:*)"
+      "Bash(mvn package:*)",
+      "Bash(mvn compile:*)"
     ]
   }
 }
