@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+# Suppress all console logging so it doesn't corrupt the stdio JSON stream
+logging:
+  level:
+    root: OFF

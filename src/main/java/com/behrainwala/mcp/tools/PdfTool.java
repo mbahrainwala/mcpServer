@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 
 /**
@@ -30,11 +31,12 @@ public class PdfTool {
     private static final int MAX_TEXT_LENGTH = 50_000;
 
     @Tool(name = "pdf_to_text",
-          description = "Extract all text content from a PDF file at a local file path or a URL. "
+          description = "Extract all text content from a PDF. Accepts a local file path, a URL, or base64-encoded PDF content. "
                   + "Returns the full text of the document so that LLMs do not need to spend vision tokens on PDF images. "
                   + "Optionally restrict extraction to a specific page range.")
     public String pdfToText(
-            @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf') or a URL pointing to a PDF.") String source,
+            @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf'), a URL pointing to a PDF, "
+                    + "or base64-encoded PDF content (prefixed with 'base64:').") String source,
             @ToolParam(description = "First page to extract (1-based, inclusive). Omit or set 0 for the beginning.", required = false) Integer startPage,
             @ToolParam(description = "Last page to extract (1-based, inclusive). Omit or set 0 for the last page.", required = false) Integer endPage) {
 
@@ -61,7 +63,7 @@ public class PdfTool {
             StringBuilder sb = new StringBuilder();
             sb.append("PDF Text Extraction\n");
             sb.append("───────────────────\n");
-            sb.append("Source : ").append(source).append("\n");
+            sb.append("Source : ").append(displaySource(source)).append("\n");
             sb.append("Pages  : ").append(start).append("–").append(end)
               .append(" of ").append(totalPages).append("\n\n");
 
@@ -83,11 +85,12 @@ public class PdfTool {
     }
 
     @Tool(name = "pdf_metadata",
-          description = "Return metadata and structural information for a PDF file: title, author, subject, keywords, "
+          description = "Return metadata and structural information for a PDF: title, author, subject, keywords, "
                   + "creator application, PDF producer, creation/modification dates, number of pages, page size, "
                   + "PDF version, encryption status, and file size.")
     public String pdfMetadata(
-            @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf') or a URL pointing to a PDF.") String source) {
+            @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf'), a URL pointing to a PDF, "
+                    + "or base64-encoded PDF content (prefixed with 'base64:').") String source) {
 
         try (PDDocument doc = loadDocument(source)) {
             PDDocumentInformation info = doc.getDocumentInformation();
@@ -96,7 +99,7 @@ public class PdfTool {
             StringBuilder sb = new StringBuilder();
             sb.append("PDF Metadata\n");
             sb.append("────────────\n");
-            sb.append("Source           : ").append(source).append("\n");
+            sb.append("Source           : ").append(displaySource(source)).append("\n");
 
             // Document information dictionary
             appendMeta(sb, "Title",            info.getTitle());
@@ -146,12 +149,17 @@ public class PdfTool {
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
+    private static final String BASE64_PREFIX = "base64:";
+
     private PDDocument loadDocument(String source) throws Exception {
         if (source == null || source.isBlank()) {
             throw new IllegalArgumentException("source must not be blank");
         }
         String trimmed = source.strip();
-        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        if (trimmed.startsWith(BASE64_PREFIX)) {
+            byte[] bytes = Base64.getDecoder().decode(trimmed.substring(BASE64_PREFIX.length()));
+            return Loader.loadPDF(bytes);
+        } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             URL url = URI.create(trimmed).toURL();
             try (InputStream is = url.openStream()) {
                 return Loader.loadPDF(is.readAllBytes());
@@ -170,6 +178,14 @@ public class PdfTool {
     private String formatCalendar(Calendar cal) {
         if (cal == null) return null;
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").format(cal.getTime());
+    }
+
+    private String displaySource(String source) {
+        if (source != null && source.strip().startsWith(BASE64_PREFIX)) {
+            int dataLen = source.strip().length() - BASE64_PREFIX.length();
+            return "[base64-encoded PDF, ~" + formatSize((long) (dataLen * 0.75)) + "]";
+        }
+        return source;
     }
 
     private String formatSize(long bytes) {

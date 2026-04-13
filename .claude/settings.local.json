@@ -15,7 +15,14 @@
       "Bash(mvn test:*)",
       "Bash(python3:*)",
       "Bash(awk -F',' 'NR==1{print; next} $2==\"com/behrainwala/mcp/tools\"{print}')",
-      "Bash(awk -F, '{:*)"
+      "Bash(awk -F, '{:*)",
+      "Bash(./mvnw clean:*)",
+      "Bash(java -jar target/mcp-1.0.0.jar)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl:*)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(node -e ':*)",
+      "Bash(sort -t: -k2 -n)"
     ]
   }
 }

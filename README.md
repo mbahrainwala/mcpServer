@@ -80,6 +80,9 @@ date/time, Wikipedia, unit conversion, Excel assistance, and more — all with *
 | `excel_pivot_guide` | Step-by-step pivot table creation with field placement and calculated fields. |
 | `excel_vba_snippet` | Generate VBA macros (highlight cells, remove blanks, export PDF, consolidate sheets). |
 | `excel_shortcut_reference` | Excel keyboard shortcuts by category (navigation, formatting, formulas, data). |
+| **PDF Tools** | |
+| `pdf_to_text` | Extract text from a PDF — local file path, URL, or base64-encoded content. |
+| `pdf_metadata` | Extract PDF metadata: title, author, pages, size, encryption status, etc. |
 
 ### Example Workflows
 
@@ -127,6 +130,12 @@ This produces `target/mcp-1.0.0.jar`.
 
 ### 2. Run the Server
 
+The server supports two transport modes from a single JAR — **SSE** (HTTP) and **stdio** (subprocess) — controlled via Spring profiles.
+
+#### Option A: SSE Mode (default)
+
+Runs as an HTTP server. You start it separately and clients connect over the network.
+
 ```bash
 java -jar target/mcp-1.0.0.jar
 ```
@@ -141,7 +150,26 @@ curl http://localhost:8282/actuator/metrics  # Available metrics
 curl http://localhost:8282/sse              # SSE endpoint (will stream)
 ```
 
-### Alternative: Docker
+#### Option B: Stdio Mode
+
+Runs as a subprocess managed by the MCP host (Claude Code, LM Studio, etc.). No need to start the server manually — the host launches it and communicates via stdin/stdout.
+
+```bash
+java -jar target/mcp-1.0.0.jar --spring.profiles.active=stdio
+```
+
+This disables the web server, suppresses all console logging (to keep the JSON-RPC stream clean), and activates stdio transport.
+
+#### When to use which
+
+| | SSE | Stdio |
+|---|---|---|
+| **Startup** | You start it manually | Host launches it automatically |
+| **Sharing** | Multiple clients can connect to one server | One client per process |
+| **Network** | Accessible over HTTP (local or remote) | Local only (stdin/stdout) |
+| **Best for** | LM Studio, shared/remote setups | Claude Code, single-user CLI tools |
+
+### Alternative: Docker (SSE only)
 
 ```bash
 # Build the image
@@ -158,9 +186,10 @@ docker run -d -p 8282:8282 \
 ```
 
 The image uses a multi-stage build (JDK for build, JRE for runtime) and includes a health check.
-Point LM Studio at `http://localhost:8282` as usual.
 
-### 3. Configure LM Studio
+### 3. Configure Your MCP Host
+
+#### LM Studio (SSE)
 
 Edit the LM Studio MCP configuration file:
 
@@ -168,8 +197,6 @@ Edit the LM Studio MCP configuration file:
 - **macOS/Linux:** `~/.lmstudio/mcp.json`
 
 Or open it from the LM Studio UI: **Right sidebar → Developer tab (terminal icon) → MCP → Edit mcp.json**
-
-Add this entry:
 
 ```json
 {
@@ -179,6 +206,54 @@ Add this entry:
     }
   }
 }
+```
+
+#### Claude Code (Stdio — recommended)
+
+Register the server so Claude Code launches it automatically as a subprocess.
+
+**Project-local** (only available in the current project):
+
+```bash
+claude mcp add behrainwala-mcp -- java -jar C:\dev\workspace\mcpServer\target\mcp-1.0.0.jar --spring.profiles.active=stdio
+```
+
+**Global** (available across all projects):
+
+```bash
+claude mcp add -s user behrainwala-mcp -- java -jar C:\dev\workspace\mcpServer\target\mcp-1.0.0.jar --spring.profiles.active=stdio
+```
+
+Verify it was added and is connected:
+
+```bash
+claude mcp get behrainwala-mcp   # should show Status: ✓ Connected
+claude mcp list                  # should list behrainwala-mcp
+```
+
+To remove it later:
+
+```bash
+claude mcp remove behrainwala-mcp
+```
+
+Or add manually to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "behrainwala-mcp": {
+      "command": "java",
+      "args": ["-jar", "C:\\dev\\workspace\\mcpServer\\target\\mcp-1.0.0.jar", "--spring.profiles.active=stdio"]
+    }
+  }
+}
+```
+
+#### Claude Code (SSE — if server is already running)
+
+```bash
+claude mcp add --transport sse behrainwala-mcp-sse http://localhost:8282/sse
 ```
 
 ### 4. Use It
@@ -228,14 +303,18 @@ MCP_SEARCH_MAX_RESULTS=20 java -jar target/llm-studio-mcp-1.0.0.jar
 ## Architecture
 
 ```
-┌─────────────┐     SSE/HTTP      ┌──────────────────────────┐
-│  LM Studio  │ ◄──────────────► │  MCP Server (:8282)      │
-│  (MCP Host) │   JSON-RPC 2.0   │                          │
-└─────────────┘                   │  web_search ──────► DuckDuckGo
-                                  │  fetch_webpage ───► Any URL
+                                  ┌──────────────────────────┐
+┌─────────────┐     SSE/HTTP      │                          │
+│  LM Studio  │ ◄──────────────► │                          │
+└─────────────┘   JSON-RPC 2.0   │  MCP Server              │
+                                  │  (mcp-1.0.0.jar)         │
+┌─────────────┐     stdio         │                          │
+│ Claude Code │ ◄──────────────► │  web_search ──────► DuckDuckGo
+└─────────────┘   JSON-RPC 2.0   │  fetch_webpage ───► Any URL
                                   │  wikipedia_lookup ► Wikipedia API
                                   │  define_word ─────► Dictionary API
                                   │  http_request ────► Any API
+                                  │  pdf_to_text ─────► Local/URL/Base64
                                   │  calculate, statistics  (local)
                                   │  solve_quadratic, etc.  (local)
                                   │  regex_*, json_*        (local)
@@ -280,41 +359,6 @@ MCP_SEARCH_MAX_RESULTS=20 java -jar target/llm-studio-mcp-1.0.0.jar
 | `service/WebContentService.java` | HTML fetch and text extraction |
 | `model/SearchResult.java` | Search result data model |
 
-## Alternative: STDIO Transport
-
-If you prefer LM Studio to launch the server as a subprocess (no need to start it manually):
-
-1. Change `pom.xml` dependency from `spring-ai-starter-mcp-server-webmvc` to `spring-ai-starter-mcp-server`
-2. Update `application.yml`:
-   ```yaml
-   spring:
-     main:
-       web-application-type: none
-       banner-mode: off
-     ai:
-       mcp:
-         server:
-           type: SYNC
-           name: llm-studio-mcp-server
-           version: 1.0.0
-   logging:
-     pattern:
-       console:
-     file:
-       name: ./logs/mcp-server.log
-   ```
-3. Configure `mcp.json` with a command instead of URL:
-   ```json
-   {
-     "mcpServers": {
-       "web-search": {
-         "command": "java",
-         "args": ["-jar", "{project directory}/target/llm-studio-mcp-1.0.0.jar"]
-       }
-     }
-   }
-   ```
-
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -324,6 +368,8 @@ If you prefer LM Studio to launch the server as a subprocess (no need to start i
 | Fetch returns truncated content | Increase `mcp.fetch.max-content-length` in config. |
 | Connection refused | Check the port matches between `application.yml` and `mcp.json`. |
 | Model doesn't call the tools | Not all models support tool calling. Use Qwen 2.5 7B+, Llama 3.1 8B+, or similar. |
+| Stdio mode not connecting | Ensure you pass `--spring.profiles.active=stdio`. Check that `java` is on PATH. |
+| PDF tool fails in SSE mode | Use a URL or `base64:`-prefixed content instead of a local file path. |
 
 ## License
 

@@ -41,6 +41,12 @@
             <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
         </dependency>
 
+        <!-- MCP Server with stdio transport (for CLI integration) -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server</artifactId>
+        </dependency>
+
         <!-- Web starter for RestClient -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
