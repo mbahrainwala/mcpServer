@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.math.RoundingMode;
 
 /**
  * MCP tool for advanced mathematics: equation solving, geometry, algebra,
@@ -137,13 +136,10 @@ public class AdvancedMathTool {
                 result = result * x + coeffs[i];
             }
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("Polynomial Evaluation\n");
-            sb.append("────────────────────\n");
-            sb.append("P(x) = ").append(formatPolynomial(coeffs)).append("\n\n");
-            sb.append("P(").append(fmt(x)).append(") = ").append(fmt(result));
-
-            return sb.toString();
+            return "Polynomial Evaluation\n" +
+                    "────────────────────\n" +
+                    "P(x) = " + formatPolynomial(coeffs) + "\n\n" +
+                    "P(" + fmt(x) + ") = " + fmt(result);
 
         } catch (NumberFormatException e) {
             return "Error: Invalid coefficients. Provide comma-separated numbers like '3,0,-2,5'";
@@ -198,38 +194,30 @@ public class AdvancedMathTool {
         // Classify
         String type = classifyTriangle(a, b, c, angleA, angleB, angleC);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Triangle Properties\n");
-        sb.append("───────────────────\n");
-        sb.append("Sides: a = ").append(fmt(a)).append(", b = ").append(fmt(b)).append(", c = ").append(fmt(c)).append("\n");
-        sb.append("Type: ").append(type).append("\n\n");
-
-        sb.append("MEASUREMENTS\n");
-        sb.append("  Perimeter: ").append(fmt(perimeter)).append("\n");
-        sb.append("  Area: ").append(fmt(area)).append(" (Heron's formula)\n");
-        sb.append("  Semi-perimeter: ").append(fmt(s)).append("\n\n");
-
-        sb.append("ANGLES\n");
-        sb.append("  A (opposite a): ").append(fmt(angleA)).append("°\n");
-        sb.append("  B (opposite b): ").append(fmt(angleB)).append("°\n");
-        sb.append("  C (opposite c): ").append(fmt(angleC)).append("°\n");
-        sb.append("  Sum: ").append(fmt(angleA + angleB + angleC)).append("° ✓\n\n");
-
-        sb.append("HEIGHTS (ALTITUDES)\n");
-        sb.append("  hₐ = ").append(fmt(ha)).append("\n");
-        sb.append("  hᵦ = ").append(fmt(hb)).append("\n");
-        sb.append("  h꜀ = ").append(fmt(hc)).append("\n\n");
-
-        sb.append("MEDIANS\n");
-        sb.append("  mₐ = ").append(fmt(ma)).append("\n");
-        sb.append("  mᵦ = ").append(fmt(mb)).append("\n");
-        sb.append("  m꜀ = ").append(fmt(mc)).append("\n\n");
-
-        sb.append("RADII\n");
-        sb.append("  Circumradius (R): ").append(fmt(R)).append("\n");
-        sb.append("  Inradius (r): ").append(fmt(r));
-
-        return sb.toString();
+        return "Triangle Properties\n" +
+                "───────────────────\n" +
+                "Sides: a = " + fmt(a) + ", b = " + fmt(b) + ", c = " + fmt(c) + "\n" +
+                "Type: " + type + "\n\n" +
+                "MEASUREMENTS\n" +
+                "  Perimeter: " + fmt(perimeter) + "\n" +
+                "  Area: " + fmt(area) + " (Heron's formula)\n" +
+                "  Semi-perimeter: " + fmt(s) + "\n\n" +
+                "ANGLES\n" +
+                "  A (opposite a): " + fmt(angleA) + "°\n" +
+                "  B (opposite b): " + fmt(angleB) + "°\n" +
+                "  C (opposite c): " + fmt(angleC) + "°\n" +
+                "  Sum: " + fmt(angleA + angleB + angleC) + "° ✓\n\n" +
+                "HEIGHTS (ALTITUDES)\n" +
+                "  hₐ = " + fmt(ha) + "\n" +
+                "  hᵦ = " + fmt(hb) + "\n" +
+                "  h꜀ = " + fmt(hc) + "\n\n" +
+                "MEDIANS\n" +
+                "  mₐ = " + fmt(ma) + "\n" +
+                "  mᵦ = " + fmt(mb) + "\n" +
+                "  m꜀ = " + fmt(mc) + "\n\n" +
+                "RADII\n" +
+                "  Circumradius (R): " + fmt(R) + "\n" +
+                "  Inradius (r): " + fmt(r);
     }
 
     @Tool(name = "triangle_area", description = "Calculate the area of a triangle using various methods: "

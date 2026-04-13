@@ -153,7 +153,7 @@ public class JsonTool {
             return switch (operation.strip().toLowerCase()) {
                 case "minify" -> {
                     String result = compactMapper.writeValueAsString(node);
-                    yield "Minified (" + result.length() + " chars):\n" + truncate(result, 5000);
+                    yield "Minified (" + result.length() + " chars):\n" + truncate(result);
                 }
                 case "sort_keys" -> {
                     JsonNode sorted = sortKeys(node);
@@ -326,7 +326,7 @@ public class JsonTool {
         } catch (Exception e) { return node.toString(); }
     }
 
-    private String truncate(String s, int max) {
-        return s.length() <= max ? s : s.substring(0, max) + "... [truncated]";
+    private String truncate(String s) {
+        return s.length() <= 5000 ? s : s.substring(0, 5000) + "... [truncated]";
     }
 }
