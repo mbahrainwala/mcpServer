@@ -22,7 +22,16 @@
       "Bash(curl:*)",
       "Bash(echo \"Exit code: $?\")",
       "Bash(node -e ':*)",
-      "Bash(sort -t: -k2 -n)"
+      "Bash(sort -t: -k2 -n)",
+      "Bash(ls -1 /c/dev/workspace/mcpServer/src/main/java/com/behrainwala/mcp/tools/*.java)",
+      "Bash(xargs basename:*)",
+      "Bash(mvn dependency:tree -q)",
+      "Bash(mvn dependency:tree -f pom.xml)",
+      "Bash(grep -i \"\\\\.class$\")",
+      "Bash(javap:*)",
+      "Bash(grep -A 50 'lambda$toSharedSyncToolSpecification')",
+      "Bash(./mvnw test:*)",
+      "Bash(ls:*)"
     ]
   }
 }

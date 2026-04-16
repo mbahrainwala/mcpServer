@@ -10,11 +10,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Calendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PdfToolTest {
 
@@ -118,7 +124,8 @@ class PdfToolTest {
     void pdfToText_blankPdf_showsNoExtractableText() throws Exception {
         File pdfFile = createBlankPdf();
         String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
-        assertThat(result).contains("No extractable text found");
+        assertThat(result).contains("No extractable text found")
+                .contains("pdf_to_images");
     }
 
     @Test
@@ -202,6 +209,175 @@ class PdfToolTest {
         File pdfFile = createTestPdf("x");
         String result = tool.pdfMetadata(pdfFile.getAbsolutePath());
         assertThat(result).containsPattern("File Size\\s+: \\d+");
+    }
+
+    // ── renderPagesToBase64Jpeg ────────────────────────────────────────────
+
+    @Test
+    void renderPagesToBase64Jpeg_validPdf_returnsBase64Images() throws Exception {
+        File pdfFile = createTestPdf("Image render test");
+        PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.base64Images()).hasSize(1);
+        assertThat(result.startPage()).isEqualTo(1);
+        assertThat(result.endPage()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+
+        // Verify the base64 data decodes to a valid JPEG
+        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().get(0));
+        BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        assertThat(img).isNotNull();
+        assertThat(img.getWidth()).isGreaterThan(0);
+        assertThat(img.getHeight()).isGreaterThan(0);
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_multiPage_returnsAllPages() throws Exception {
+        File pdfFile = createMultiPagePdf("A", "B", "C");
+        PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.base64Images()).hasSize(3);
+        assertThat(result.totalPages()).isEqualTo(3);
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_pageRange_rendersSubset() throws Exception {
+        File pdfFile = createMultiPagePdf("A", "B", "C");
+        PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), 2, 3, null);
+
+        assertThat(result.base64Images()).hasSize(2);
+        assertThat(result.startPage()).isEqualTo(2);
+        assertThat(result.endPage()).isEqualTo(3);
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_capsAtMaxPages() throws Exception {
+        // Create a 7-page PDF — max is 5 pages
+        File pdfFile = createMultiPagePdf("A", "B", "C", "D", "E", "F", "G");
+        PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.base64Images()).hasSize(5);
+        assertThat(result.endPage()).isEqualTo(5);
+        assertThat(result.totalPages()).isEqualTo(7);
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_customDpi_producesLargerImage() throws Exception {
+        File pdfFile = createTestPdf("DPI test");
+
+        PdfTool.PdfImageResult lowDpi = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 72);
+        PdfTool.PdfImageResult highDpi = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 200);
+
+        // Higher DPI should produce a larger base64 string (more pixels)
+        assertThat(highDpi.base64Images().get(0).length())
+                .isGreaterThan(lowDpi.base64Images().get(0).length());
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_dpiCappedAt300() throws Exception {
+        File pdfFile = createTestPdf("Max DPI test");
+
+        PdfTool.PdfImageResult at300 = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 300);
+        PdfTool.PdfImageResult at999 = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 999);
+
+        // Both should produce the same size since 999 is capped to 300
+        assertThat(at999.base64Images().get(0).length())
+                .isEqualTo(at300.base64Images().get(0).length());
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_blankSource_throws() {
+        assertThatThrownBy(() -> tool.renderPagesToBase64Jpeg("", null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("blank");
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_nullSource_throws() {
+        assertThatThrownBy(() -> tool.renderPagesToBase64Jpeg(null, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("blank");
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_startPageExceedsTotal_throws() throws Exception {
+        File pdfFile = createTestPdf("Single page");
+        assertThatThrownBy(() -> tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), 99, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exceeds total pages");
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_startGreaterThanEnd_throws() throws Exception {
+        File pdfFile = createMultiPagePdf("A", "B", "C");
+        assertThatThrownBy(() -> tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), 3, 1, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("greater than endPage");
+    }
+
+    // ── renderPagesToFiles ─────────────────────────────────────────────────
+
+    @Test
+    void renderPagesToFiles_validPdf_savesJpegFiles() throws Exception {
+        File pdfFile = createTestPdf("File render test");
+        PdfTool.PdfFileResult result = tool.renderPagesToFiles(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.filePaths()).hasSize(1);
+        assertThat(result.startPage()).isEqualTo(1);
+        assertThat(result.endPage()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+
+        // Verify the file exists and is a valid JPEG
+        Path savedFile = Path.of(result.filePaths().get(0));
+        assertThat(Files.exists(savedFile)).isTrue();
+        assertThat(savedFile.getFileName().toString()).isEqualTo("page_1.jpg");
+
+        // Verify the parent directory name contains the PDF filename for identification
+        String parentDirName = savedFile.getParent().getFileName().toString();
+        assertThat(parentDirName).startsWith("pdf_images_test_");
+
+        BufferedImage img = ImageIO.read(savedFile.toFile());
+        assertThat(img).isNotNull();
+        assertThat(img.getWidth()).isGreaterThan(0);
+    }
+
+    @Test
+    void renderPagesToFiles_multiPage_savesAllFiles() throws Exception {
+        File pdfFile = createMultiPagePdf("A", "B", "C");
+        PdfTool.PdfFileResult result = tool.renderPagesToFiles(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.filePaths()).hasSize(3);
+        for (String path : result.filePaths()) {
+            assertThat(Files.exists(Path.of(path))).isTrue();
+        }
+    }
+
+    @Test
+    void renderPagesToFiles_pageRange_savesSubset() throws Exception {
+        File pdfFile = createMultiPagePdf("A", "B", "C");
+        PdfTool.PdfFileResult result = tool.renderPagesToFiles(pdfFile.getAbsolutePath(), 2, 3, null);
+
+        assertThat(result.filePaths()).hasSize(2);
+        assertThat(result.filePaths().get(0)).contains("page_2.jpg");
+        assertThat(result.filePaths().get(1)).contains("page_3.jpg");
+    }
+
+    @Test
+    void renderPagesToFiles_blankSource_throws() {
+        assertThatThrownBy(() -> tool.renderPagesToFiles("", null, null, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void renderPagesToBase64Jpeg_blankPdf_rendersImage() throws Exception {
+        // Even a blank PDF (no text) should render as a valid image
+        File pdfFile = createBlankPdf();
+        PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, null);
+
+        assertThat(result.base64Images()).hasSize(1);
+        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().get(0));
+        BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        assertThat(img).isNotNull();
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

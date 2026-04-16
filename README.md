@@ -6,83 +6,84 @@ date/time, Wikipedia, unit conversion, Excel assistance, and more — all with *
 
 ## Tools Provided
 
-| Tool | Description |
-|------|-------------|
-| `web_search` | Search the internet via DuckDuckGo. Returns titles, URLs, and snippets. |
-| `fetch_webpage` | Fetch a URL and extract the main text content (strips ads, nav, scripts). |
-| `calculate` | Evaluate math expressions with exact precision (+, -, *, /, ^, sqrt, sin, log, etc.). |
-| `solve_quadratic` | Solve quadratic equations (ax² + bx + c = 0), returns real or complex roots. |
-| `solve_linear_system` | Solve systems of 2 linear equations (Cramer's rule). |
-| `compute_polynomial` | Evaluate any polynomial at a given x value. |
-| `triangle_properties` | Full triangle analysis: area, angles, heights, medians, radii from 3 sides. |
-| `triangle_area` | Area via 4 methods: base/height, two sides + angle, coordinates, Heron's. |
-| `circle_properties` | All circle measurements from any one known value. |
-| `shape_area_volume` | Area/volume for rectangles, spheres, cylinders, cones, pyramids, and more. |
-| `statistics` | Descriptive stats: mean, median, mode, std dev, quartiles, IQR. |
-| `number_properties` | Factors, prime factorization, GCD/LCM, primality, perfect squares. |
-| `trigonometry` | Trig values for any angle, or solve a right triangle from 2 known values. |
-| `get_current_datetime` | Get the current date and time in any timezone. |
-| `convert_timezone` | Convert a date/time between timezones. |
-| `date_difference` | Calculate the difference between two dates. |
-| `wikipedia_lookup` | Look up a topic on Wikipedia and get a concise summary. |
-| `convert_units` | Convert between units: length, weight, volume, temperature, speed, area, time, data. |
-| `define_word` | Look up English word definitions, pronunciation, and usage examples. |
-| **Coding Tools** | |
-| `regex_test` | Test a regex pattern against input, showing all matches and captured groups. |
-| `regex_replace` | Regex find-and-replace with backreference support. |
-| `regex_explain` | Break down a regex pattern into plain English. |
-| `json_validate` | Validate, pretty-print, and analyze JSON structure. |
-| `json_query` | Extract values from JSON using dot-notation paths (`users[*].email`). |
-| `json_diff` | Compare two JSON documents and show added/removed/changed fields. |
-| `json_transform` | Minify, sort keys, flatten, or extract schema from JSON. |
-| `encode_decode` | Base64, URL, HTML, and Hex encoding/decoding. |
-| `hash_text` | Generate MD5, SHA-1, SHA-256, SHA-512 hashes. |
-| `generate_uuid` | Generate UUIDs in standard, compact, base64, or short format. |
-| `generate_password` | Generate secure random passwords with configurable requirements. |
-| `http_request` | Make HTTP requests (GET/POST/PUT/DELETE) to test APIs. |
-| `cron_explain` | Parse a cron expression and explain it in plain English. |
-| `cron_build` | Build a cron expression from a plain English description. |
-| `text_diff` | Line-by-line diff of two text blocks (like code snippets). |
-| `text_analyze` | Word count, character count, frequency analysis, readability stats. |
+| Tool | Description                                                                            |
+|------|----------------------------------------------------------------------------------------|
+| `web_search` | Search the internet via DuckDuckGo. Returns titles, URLs, and snippets.                |
+| `fetch_webpage` | Fetch a URL and extract the main text content (strips ads, nav, scripts).              |
+| `calculate` | Evaluate math expressions with exact precision (+, -, *, /, ^, sqrt, sin, log, etc.).  |
+| `solve_quadratic` | Solve quadratic equations (ax² + bx + c = 0), returns real or complex roots.           |
+| `solve_linear_system` | Solve systems of 2 linear equations (Cramer's rule).                                   |
+| `compute_polynomial` | Evaluate any polynomial at a given x value.                                            |
+| `triangle_properties` | Full triangle analysis: area, angles, heights, medians, radii from 3 sides.            |
+| `triangle_area` | Area via 4 methods: base/height, two sides + angle, coordinates, Heron's.              |
+| `circle_properties` | All circle measurements from any one known value.                                      |
+| `shape_area_volume` | Area/volume for rectangles, spheres, cylinders, cones, pyramids, and more.             |
+| `statistics` | Descriptive stats: mean, median, mode, std dev, quartiles, IQR.                        |
+| `number_properties` | Factors, prime factorization, GCD/LCM, primality, perfect squares.                     |
+| `trigonometry` | Trig values for any angle, or solve a right triangle from 2 known values.              |
+| `get_current_datetime` | Get the current date and time in any timezone.                                         |
+| `convert_timezone` | Convert a date/time between timezones.                                                 |
+| `date_difference` | Calculate the difference between two dates.                                            |
+| `wikipedia_lookup` | Look up a topic on Wikipedia and get a concise summary.                                |
+| `convert_units` | Convert between units: length, weight, volume, temperature, speed, area, time, data.   |
+| `define_word` | Look up English word definitions, pronunciation, and usage examples.                   |
+| **Coding Tools** |                                                                                        |
+| `regex_test` | Test a regex pattern against input, showing all matches and captured groups.           |
+| `regex_replace` | Regex find-and-replace with backreference support.                                     |
+| `regex_explain` | Break down a regex pattern into plain English.                                         |
+| `json_validate` | Validate, pretty-print, and analyze JSON structure.                                    |
+| `json_query` | Extract values from JSON using dot-notation paths (`users[*].email`).                  |
+| `json_diff` | Compare two JSON documents and show added/removed/changed fields.                      |
+| `json_transform` | Minify, sort keys, flatten, or extract schema from JSON.                               |
+| `encode_decode` | Base64, URL, HTML, and Hex encoding/decoding.                                          |
+| `hash_text` | Generate MD5, SHA-1, SHA-256, SHA-512 hashes.                                          |
+| `generate_uuid` | Generate UUIDs in standard, compact, base64, or short format.                          |
+| `generate_password` | Generate secure random passwords with configurable requirements.                       |
+| `http_request` | Make HTTP requests (GET/POST/PUT/DELETE) to test APIs.                                 |
+| `cron_explain` | Parse a cron expression and explain it in plain English.                               |
+| `cron_build` | Build a cron expression from a plain English description.                              |
+| `text_diff` | Line-by-line diff of two text blocks (like code snippets).                             |
+| `text_analyze` | Word count, character count, frequency analysis, readability stats.                    |
 | `text_transform` | Convert between camelCase, snake_case, PascalCase, kebab-case, etc. Sort/dedupe lines. |
-| **Physics Tools** | |
-| `physics_constants` | Look up fundamental constants (speed of light, Planck, Boltzmann, etc.). |
-| `physics_kinematics` | Solve SUVAT equations — provide any 3 of s, u, v, a, t. |
-| `physics_forces` | Newton's laws, gravity, friction, centripetal, spring, work, energy, momentum, power. |
-| `physics_waves` | Wave speed, photon energy, de Broglie, Doppler, Snell's law, thin lens. |
-| `physics_electricity` | Ohm's law, resistors/capacitors series/parallel, Coulomb, RC/RL circuits, E-field. |
-| `physics_thermodynamics` | Ideal gas law, heat transfer, Carnot efficiency, Stefan-Boltzmann, entropy. |
-| **Chemistry Tools** | |
-| `element_lookup` | Periodic table lookup — atomic number, mass, group, period, category. |
-| `molar_mass` | Calculate molar mass from formula (e.g. `Ca(OH)2` → 74.093 g/mol) with mass %. |
-| `chemistry_solutions` | Molarity, dilution, pH/pOH, mass↔moles, stoichiometry. |
-| `chemistry_gas_laws` | Ideal gas, Boyle's, Charles's, Dalton's, Graham's effusion. |
-| `chemistry_equilibrium` | Kp/Kc, half-life, Arrhenius equation, Nernst equation. |
-| **Biology Tools** | |
-| `dna_operations` | Complement, reverse complement, transcribe, translate, GC content, Tm, MW. |
-| `hardy_weinberg` | Hardy-Weinberg equilibrium — allele & genotype frequencies. |
-| `punnett_square` | Mono/dihybrid crosses with genotype & phenotype ratios. |
-| `population_growth` | Exponential, logistic growth, doubling time, growth rate. |
-| `enzyme_kinetics` | Michaelis-Menten, Lineweaver-Burk, competitive inhibition, kcat. |
-| **Calculus Tools** | |
-| `numerical_derivative` | Numerical differentiation (1st–4th order) at a point. |
-| `numerical_integral` | Definite integration via Simpson's rule. |
-| `numerical_limit` | Evaluate limits from left, right, or both sides (including ±∞). |
-| `series_sum` | Geometric, harmonic, p-series, Taylor series (sin, cos, e^x, ln). |
-| `matrix_operations` | Determinant, inverse, multiply, transpose, eigenvalues, solve Ax=b. |
-| **Excel Tools** | |
-| `excel_function_lookup` | Search 80+ Excel functions by name, category, or keyword with syntax and examples. |
-| `excel_formula_explain` | Break down complex Excel formulas into plain English — functions, references, issues. |
-| `excel_formula_build` | Generate Excel formulas from plain English descriptions (VLOOKUP, SUMIFS, etc.). |
-| `excel_analyze_data` | Analyze CSV data — detect types, statistics, data quality, suggest formulas. |
-| `excel_chart_recommend` | Recommend the best chart type for your data (line, pie, bar, scatter, etc.). |
-| `excel_conditional_format` | Generate conditional formatting rules (duplicates, traffic light, data bars, etc.). |
-| `excel_pivot_guide` | Step-by-step pivot table creation with field placement and calculated fields. |
-| `excel_vba_snippet` | Generate VBA macros (highlight cells, remove blanks, export PDF, consolidate sheets). |
-| `excel_shortcut_reference` | Excel keyboard shortcuts by category (navigation, formatting, formulas, data). |
-| **PDF Tools** | |
-| `pdf_to_text` | Extract text from a PDF — local file path, URL, or base64-encoded content. |
-| `pdf_metadata` | Extract PDF metadata: title, author, pages, size, encryption status, etc. |
+| **Physics Tools** |                                                                                        |
+| `physics_constants` | Look up fundamental constants (speed of light, Planck, Boltzmann, etc.).               |
+| `physics_kinematics` | Solve SUVAT equations — provide any 3 of s, u, v, a, t.                                |
+| `physics_forces` | Newton's laws, gravity, friction, centripetal, spring, work, energy, momentum, power.  |
+| `physics_waves` | Wave speed, photon energy, de Broglie, Doppler, Snell's law, thin lens.                |
+| `physics_electricity` | Ohm's law, resistors/capacitors series/parallel, Coulomb, RC/RL circuits, E-field.     |
+| `physics_thermodynamics` | Ideal gas law, heat transfer, Carnot efficiency, Stefan-Boltzmann, entropy.            |
+| **Chemistry Tools** |                                                                                        |
+| `element_lookup` | Periodic table lookup — atomic number, mass, group, period, category.                  |
+| `molar_mass` | Calculate molar mass from formula (e.g. `Ca(OH)2` → 74.093 g/mol) with mass %.         |
+| `chemistry_solutions` | Molarity, dilution, pH/pOH, mass↔moles, stoichiometry.                                 |
+| `chemistry_gas_laws` | Ideal gas, Boyle's, Charles's, Dalton's, Graham's effusion.                            |
+| `chemistry_equilibrium` | Kp/Kc, half-life, Arrhenius equation, Nernst equation.                                 |
+| **Biology Tools** |                                                                                        |
+| `dna_operations` | Complement, reverse complement, transcribe, translate, GC content, Tm, MW.             |
+| `hardy_weinberg` | Hardy-Weinberg equilibrium — allele & genotype frequencies.                            |
+| `punnett_square` | Mono/dihybrid crosses with genotype & phenotype ratios.                                |
+| `population_growth` | Exponential, logistic growth, doubling time, growth rate.                              |
+| `enzyme_kinetics` | Michaelis-Menten, Lineweaver-Burk, competitive inhibition, kcat.                       |
+| **Calculus Tools** |                                                                                        |
+| `numerical_derivative` | Numerical differentiation (1st–4th order) at a point.                                  |
+| `numerical_integral` | Definite integration via Simpson's rule.                                               |
+| `numerical_limit` | Evaluate limits from left, right, or both sides (including ±∞).                        |
+| `series_sum` | Geometric, harmonic, p-series, Taylor series (sin, cos, e^x, ln).                      |
+| `matrix_operations` | Determinant, inverse, multiply, transpose, eigenvalues, solve Ax=b.                    |
+| **Excel Tools** |                                                                                        |
+| `excel_function_lookup` | Search 80+ Excel functions by name, category, or keyword with syntax and examples.     |
+| `excel_formula_explain` | Break down complex Excel formulas into plain English — functions, references, issues.  |
+| `excel_formula_build` | Generate Excel formulas from plain English descriptions (VLOOKUP, SUMIFS, etc.).       |
+| `excel_analyze_data` | Analyze CSV data — detect types, statistics, data quality, suggest formulas.           |
+| `excel_chart_recommend` | Recommend the best chart type for your data (line, pie, bar, scatter, etc.).           |
+| `excel_conditional_format` | Generate conditional formatting rules (duplicates, traffic light, data bars, etc.).    |
+| `excel_pivot_guide` | Step-by-step pivot table creation with field placement and calculated fields.          |
+| `excel_vba_snippet` | Generate VBA macros (highlight cells, remove blanks, export PDF, consolidate sheets).  |
+| `excel_shortcut_reference` | Excel keyboard shortcuts by category (navigation, formatting, formulas, data).         |
+| **PDF Tools** |                                                                                        |
+| `pdf_to_text` | Extract text from a PDF — local file path, URL, or base64-encoded content.             |
+| `pdf_metadata` | Extract PDF metadata: title, author, pages, size, encryption status, etc.              |
+| `pdf_to_images` | Extract PDF pages to individual images in a subfolder for each file.                   |
 
 ### Example Workflows
 
