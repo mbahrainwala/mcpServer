@@ -73,6 +73,15 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!-- Tesseract OCR via bytedeco (self-contained, no external install required).
+             Includes native binaries for all platforms. eng.traineddata is downloaded
+             to ~/.behrainwala-mcp/tessdata/ on first OCR request. -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>tesseract-platform</artifactId>
+            <version>5.3.4-1.5.10</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -245,7 +245,7 @@ Or add manually to `~/.claude/settings.json`:
   "mcpServers": {
     "behrainwala-mcp": {
       "command": "java",
-      "args": ["-jar", "C:\\dev\\workspace\\mcpServer\\target\\mcp-1.0.0.jar", "--spring.profiles.active=stdio"]
+      "args": ["-jar", "d:\\Development\\java\\llmStudioMcp\\target\\mcp-1.0.0.jar", "--spring.profiles.active=stdio"]
     }
   }
 }

@@ -21,6 +21,8 @@ import java.util.Calendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class PdfToolTest {
 
@@ -224,7 +226,7 @@ class PdfToolTest {
         assertThat(result.totalPages()).isEqualTo(1);
 
         // Verify the base64 data decodes to a valid JPEG
-        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().get(0));
+        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().getFirst());
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
         assertThat(img).isNotNull();
         assertThat(img.getWidth()).isGreaterThan(0);
@@ -269,8 +271,8 @@ class PdfToolTest {
         PdfTool.PdfImageResult highDpi = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 200);
 
         // Higher DPI should produce a larger base64 string (more pixels)
-        assertThat(highDpi.base64Images().get(0).length())
-                .isGreaterThan(lowDpi.base64Images().get(0).length());
+        assertThat(highDpi.base64Images().getFirst().length())
+                .isGreaterThan(lowDpi.base64Images().getFirst().length());
     }
 
     @Test
@@ -281,8 +283,8 @@ class PdfToolTest {
         PdfTool.PdfImageResult at999 = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, 999);
 
         // Both should produce the same size since 999 is capped to 300
-        assertThat(at999.base64Images().get(0).length())
-                .isEqualTo(at300.base64Images().get(0).length());
+        assertThat(at999.base64Images().getFirst().length())
+                .isEqualTo(at300.base64Images().getFirst().length());
     }
 
     @Test
@@ -328,7 +330,7 @@ class PdfToolTest {
         assertThat(result.totalPages()).isEqualTo(1);
 
         // Verify the file exists and is a valid JPEG
-        Path savedFile = Path.of(result.filePaths().get(0));
+        Path savedFile = Path.of(result.filePaths().getFirst());
         assertThat(Files.exists(savedFile)).isTrue();
         assertThat(savedFile.getFileName().toString()).isEqualTo("page_1.jpg");
 
@@ -375,9 +377,76 @@ class PdfToolTest {
         PdfTool.PdfImageResult result = tool.renderPagesToBase64Jpeg(pdfFile.getAbsolutePath(), null, null, null);
 
         assertThat(result.base64Images()).hasSize(1);
-        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().get(0));
+        byte[] imageBytes = Base64.getDecoder().decode(result.base64Images().getFirst());
         BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
         assertThat(img).isNotNull();
+    }
+
+    // ── OCR fallback ─────────────────────────────────────────────────────────
+
+    @Test
+    void pdfToText_blankPdfWithOcrAvailable_returnsOcrText() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(true);
+        when(mockOcr.ocr(any(BufferedImage.class))).thenReturn("Scanned text from OCR");
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createBlankPdf();
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+
+        assertThat(result).contains("Scanned text from OCR");
+        assertThat(result).contains("[OCR via Tesseract");
+        verify(mockOcr).ocr(any(BufferedImage.class));
+    }
+
+    @Test
+    void pdfToText_blankPdfOcrReturnsBlank_showsNoTextMessage() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(true);
+        when(mockOcr.ocr(any(BufferedImage.class))).thenReturn("");
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createBlankPdf();
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+
+        assertThat(result).contains("No extractable text found");
+        assertThat(result).contains("OCR was attempted");
+    }
+
+    @Test
+    void pdfToText_ocrNotAvailable_showsFallbackMessage() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(false);
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createBlankPdf();
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+
+        assertThat(result).contains("No extractable text found");
+        assertThat(result).contains("pdf_to_images");
+        verify(mockOcr, never()).ocr(any());
+    }
+
+    @Test
+    void pdfToText_textPdfWithOcrAvailable_doesNotCallOcr() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(true);
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createTestPdf("Already has text");
+        tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+
+        verify(mockOcr, never()).ocr(any());
+    }
+
+    @Test
+    void pdfToText_ocrServiceNull_showsFallbackMessage() throws Exception {
+        // default: ocrService is null (no Spring context in unit tests)
+        File pdfFile = createBlankPdf();
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+
+        assertThat(result).contains("No extractable text found");
+        assertThat(result).contains("pdf_to_images");
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

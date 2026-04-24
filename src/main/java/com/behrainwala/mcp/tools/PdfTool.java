@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -44,11 +45,21 @@ public class PdfTool {
     private static final int DEFAULT_DPI = 150;
     private static final int MAX_DPI = 300;
     private static final int MAX_IMAGE_PAGES = 5;
+    private static final int MAX_OCR_PAGES = 10;
     private static final float JPEG_QUALITY = 0.8f;
+
+    @Autowired(required = false)
+    private OcrService ocrService;
+
+    void setOcrService(OcrService ocrService) {
+        this.ocrService = ocrService;
+    }
 
     @Tool(name = "pdf_to_text",
           description = "Extract all text content from a PDF. Accepts a local file path, a URL, or base64-encoded PDF content. "
-                  + "Returns the full text of the document so that LLMs do not need to spend vision tokens on PDF images. "
+                  + "For text-based PDFs, uses fast embedded-text extraction. "
+                  + "For image-based or scanned PDFs (where no embedded text exists), automatically falls back to "
+                  + "Tesseract OCR so that LLMs do not need to spend vision tokens. "
                   + "Optionally restrict extraction to a specific page range.")
     public String pdfToText(
             @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf'), a URL pointing to a PDF, "
@@ -84,8 +95,26 @@ public class PdfTool {
               .append(" of ").append(totalPages).append("\n\n");
 
             if (text.isBlank()) {
-                sb.append("[No extractable text found — the PDF may be image-based or encrypted. ")
-                  .append("Use the 'pdf_to_images' tool to render pages as JPEG images for vision-based reading.]");
+                if (ocrService != null && ocrService.isAvailable()) {
+                    String ocrText = ocrPages(doc, start, end);
+                    if (!ocrText.isBlank()) {
+                        sb.append("[OCR via Tesseract — pages ").append(start).append("–").append(end).append("]\n\n");
+                        if (ocrText.length() > MAX_TEXT_LENGTH) {
+                            sb.append(ocrText, 0, MAX_TEXT_LENGTH);
+                            sb.append("\n\n... [truncated at ").append(MAX_TEXT_LENGTH)
+                              .append(" chars — use startPage/endPage to extract specific sections]");
+                        } else {
+                            sb.append(ocrText);
+                        }
+                    } else {
+                        sb.append("[No extractable text found. OCR was attempted but returned no text — ")
+                          .append("the PDF may contain non-text images or be encrypted. ")
+                          .append("Use 'pdf_to_images' for visual inspection.]");
+                    }
+                } else {
+                    sb.append("[No extractable text found — the PDF may be image-based or encrypted. ")
+                      .append("Use the 'pdf_to_images' tool to render pages as JPEG images for vision-based reading.]");
+                }
             } else if (text.length() > MAX_TEXT_LENGTH) {
                 sb.append(text, 0, MAX_TEXT_LENGTH);
                 sb.append("\n\n... [truncated at ").append(MAX_TEXT_LENGTH).append(" chars — use startPage/endPage to extract specific sections]");
@@ -235,6 +264,27 @@ public class PdfTool {
         }
 
         return new PdfFileResult(filePaths, imgResult.startPage(), imgResult.endPage(), imgResult.totalPages(), imgResult.source());
+    }
+
+    private String ocrPages(PDDocument doc, int start, int end) {
+        int ocrEnd = Math.min(end, start + MAX_OCR_PAGES - 1);
+        if (ocrEnd < end) {
+            log.info("Capping OCR to {} pages ({}–{} of requested {})", MAX_OCR_PAGES, start, ocrEnd, end);
+        }
+        PDFRenderer renderer = new PDFRenderer(doc);
+        StringBuilder sb = new StringBuilder();
+        for (int pageIdx = start - 1; pageIdx < ocrEnd; pageIdx++) {
+            try {
+                BufferedImage img = renderer.renderImageWithDPI(pageIdx, DEFAULT_DPI);
+                String pageText = ocrService.ocr(img);
+                if (!pageText.isBlank()) {
+                    sb.append(pageText).append("\n");
+                }
+            } catch (Exception e) {
+                log.warn("OCR failed for page {}: {}", pageIdx + 1, e.getMessage());
+            }
+        }
+        return sb.toString().strip();
     }
 
     private String encodeToBase64Jpeg(BufferedImage image) throws Exception {
