@@ -86,8 +86,11 @@ public class McpServerConfig {
      * Registers the pdf_to_images tool directly as a SyncToolSpecification so we can
      * return MCP ImageContent (base64 JPEG) instead of plain text. This allows LLMs
      * to use vision to decode image-based / scanned PDFs.
+     *
+     * Disabled: local LLMs do not handle ImageContent well and get confused by this tool.
+     * pdf_to_text now reports image-only PDFs with a clear message instead.
      */
-    @Bean
+    // @Bean
     public List<McpServerFeatures.SyncToolSpecification> pdfImageToolSpecs(PdfTool pdfTool) {
         McpSchema.JsonSchema inputSchema = new McpSchema.JsonSchema(
                 "object",

@@ -108,12 +108,12 @@ public class PdfTool {
                         }
                     } else {
                         sb.append("[No extractable text found. OCR was attempted but returned no text — ")
-                          .append("the PDF may contain non-text images or be encrypted. ")
-                          .append("Use 'pdf_to_images' for visual inspection.]");
+                          .append("this PDF appears to be image-only (scanned or non-text content) or encrypted. ")
+                          .append("No further text extraction is possible.]");
                     }
                 } else {
-                    sb.append("[No extractable text found — the PDF may be image-based or encrypted. ")
-                      .append("Use the 'pdf_to_images' tool to render pages as JPEG images for vision-based reading.]");
+                    sb.append("[No extractable text found — this PDF is image-only (scanned or graphical content) or encrypted. ")
+                      .append("Use the pdf_to_images tool to render pages as images for vision-based reading.]");
                 }
             } else if (text.length() > MAX_TEXT_LENGTH) {
                 sb.append(text, 0, MAX_TEXT_LENGTH);
