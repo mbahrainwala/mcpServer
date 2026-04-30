@@ -31,7 +31,12 @@
       "Bash(javap:*)",
       "Bash(grep -A 50 'lambda$toSharedSyncToolSpecification')",
       "Bash(./mvnw test:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__behrainwala-mcp__pdf_to_text",
+      "mcp__behrainwala-mcp__calculate",
+      "Bash(grep -E \"\\\\.\\(java|json\\)$\")",
+      "Bash(mvn dependency:resolve)",
+      "mcp__behrainwala-mcp__doc_create"
     ]
   }
 }

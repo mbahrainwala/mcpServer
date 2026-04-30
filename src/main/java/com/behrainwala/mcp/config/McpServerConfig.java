@@ -53,7 +53,10 @@ public class McpServerConfig {
             ExcelFormulaTool excelFormulaTool,
             ExcelDataTool excelDataTool,
             // Document tools
-            PdfTool pdfTool) {
+            PdfTool pdfTool,
+            ImageTool imageTool,
+            DocumentTool documentTool,
+            ExcelTool excelTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
@@ -77,7 +80,10 @@ public class McpServerConfig {
                         biologyTool,
                         excelFormulaTool,
                         excelDataTool,
-                        pdfTool
+                        pdfTool,
+                        imageTool,
+                        documentTool,
+                        excelTool
                 )
                 .build();
     }
