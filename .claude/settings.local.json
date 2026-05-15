@@ -36,7 +36,10 @@
       "mcp__behrainwala-mcp__calculate",
       "Bash(grep -E \"\\\\.\\(java|json\\)$\")",
       "Bash(mvn dependency:resolve)",
-      "mcp__behrainwala-mcp__doc_create"
+      "mcp__behrainwala-mcp__doc_create",
+      "Bash(Get-ChildItem *)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\Development\\\\java\\\\llmStudioMcp\\\\src\\\\main\\\\java\\\\com\\\\behrainwala\\\\mcp\\\\tools\" | Where-Object {$_.Extension -eq \".java\"} | Select-Object FullName)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

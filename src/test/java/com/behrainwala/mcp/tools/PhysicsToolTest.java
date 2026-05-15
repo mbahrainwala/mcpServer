@@ -566,6 +566,94 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
+    // ── physics_constants — short symbol queries ─────────────────────────────
+
+    @Test
+    void physicsConstants_symbolG_returnsMechanics() {
+        String result = tool.physicsConstants("g");
+        assertThat(result).contains("MECHANICS & RELATIVITY")
+                .contains("Standard gravity")
+                .contains("Gravitational constant");
+    }
+
+    @Test
+    void physicsConstants_symbolC_returnsSpeedOfLight() {
+        String result = tool.physicsConstants("c");
+        assertThat(result).contains("Speed of light");
+    }
+
+    @Test
+    void physicsConstants_symbolH_returnsPlanck() {
+        String result = tool.physicsConstants("h");
+        assertThat(result).contains("Planck constant");
+    }
+
+    @Test
+    void physicsConstants_wordConstants_returnsAll() {
+        String result = tool.physicsConstants("constants");
+        assertThat(result)
+                .contains("MECHANICS & RELATIVITY")
+                .contains("ELECTROMAGNETISM")
+                .contains("QUANTUM & ATOMIC")
+                .contains("THERMODYNAMICS");
+    }
+
+    // ── projectile motion ─────────────────────────────────────────────────────
+
+    @Test
+    void projectile_45deg_200ms_earthG() {
+        // R = v²sin(2θ)/g = 200²*sin(90)/9.80665 ≈ 4077.7 m
+        // H = v²sin²(θ)/(2g) = 200²*0.5/(2*9.80665) ≈ 1019.4 m
+        String result = tool.projectile(200.0, 45.0, null);
+        assertThat(result)
+                .contains("2D Projectile Motion")
+                .contains("4078")   // range ~4078 m
+                .contains("1019");  // max height ~1019 m
+    }
+
+    @Test
+    void projectile_45deg_customG() {
+        // Moon gravity: g=1.62
+        String result = tool.projectile(200.0, 45.0, 1.62);
+        assertThat(result)
+                .contains("1.62")
+                .contains("range");
+    }
+
+    @Test
+    void projectile_horizontalLaunch_zeroHeight() {
+        // θ=0 → vy=0, maxHeight=0, range=0 (lands immediately at launch point)
+        String result = tool.projectile(100.0, 0.0, null);
+        assertThat(result).contains("2D Projectile Motion");
+    }
+
+    @Test
+    void projectile_verticalLaunch_zeroRange() {
+        // θ=90 → vx≈0, range≈0, height = v²/(2g)
+        String result = tool.projectile(50.0, 90.0, null);
+        assertThat(result)
+                .contains("2D Projectile Motion")
+                .contains("range");
+    }
+
+    @Test
+    void projectile_nullSpeed_returnsError() {
+        String result = tool.projectile(null, 45.0, null);
+        assertThat(result).contains("Error:");
+    }
+
+    @Test
+    void projectile_invalidAngle_returnsError() {
+        String result = tool.projectile(100.0, 95.0, null);
+        assertThat(result).contains("Error:");
+    }
+
+    @Test
+    void projectile_negativeSpeed_returnsError() {
+        String result = tool.projectile(-10.0, 45.0, null);
+        assertThat(result).contains("Error:");
+    }
+
     // ── fmt edge cases ───────────────────────────────────────────────────────
 
     @Test

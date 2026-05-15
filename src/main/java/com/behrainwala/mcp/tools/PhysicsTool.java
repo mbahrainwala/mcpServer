@@ -33,10 +33,11 @@ public class PhysicsTool {
     private static final double G_EARTH = 9.80665;         // standard gravity (m/s²)
 
     @Tool(name = "physics_constants", description = "Look up fundamental physical constants with their values, "
-            + "units, and symbols. Covers mechanics, electromagnetism, thermodynamics, quantum, and relativity.")
+            + "units, and symbols. Covers mechanics, electromagnetism, thermodynamics, quantum, and relativity. "
+            + "Use 'all' or 'constants' to list every constant. Single-letter symbols (c, g, G, h, e, k, R) are supported.")
     public String physicsConstants(
-            @ToolParam(description = "Search term or category. Examples: 'speed of light', 'planck', 'all', "
-                    + "'mechanics', 'electromagnetism', 'quantum', 'thermodynamics'") String query) {
+            @ToolParam(description = "Search term, symbol, or category. Examples: 'all', 'g', 'G', 'c', 'h', "
+                    + "'planck', 'mechanics', 'electromagnetism', 'quantum', 'thermodynamics'") String query) {
 
         String q = query.strip().toLowerCase();
 
@@ -44,22 +45,25 @@ public class PhysicsTool {
         sb.append("Physical Constants\n");
         sb.append("──────────────────\n\n");
 
-        boolean all = "all".equals(q);
+        boolean all = "all".equals(q) || "constant".equals(q) || "constants".equals(q);
 
-        if (all || q.contains("mechanic") || q.contains("gravit") || q.contains("speed") || q.contains("light")) {
+        if (all || q.contains("mechanic") || q.contains("gravit") || q.contains("speed") || q.contains("light")
+                || q.equals("g") || q.equals("c") || q.contains("relativity")) {
             sb.append("MECHANICS & RELATIVITY\n");
             sb.append("  c   = ").append(sci(C)).append(" m/s          Speed of light in vacuum\n");
             sb.append("  G   = ").append(sci(G)).append(" N⋅m²/kg²    Gravitational constant\n");
             sb.append("  g   = ").append(G_EARTH).append(" m/s²                Standard gravity (Earth)\n\n");
         }
-        if (all || q.contains("electro") || q.contains("charge") || q.contains("permit") || q.contains("coulomb")) {
+        if (all || q.contains("electro") || q.contains("charge") || q.contains("permit") || q.contains("coulomb")
+                || q.equals("e") || q.contains("epsilon") || q.contains("permeab")) {
             sb.append("ELECTROMAGNETISM\n");
             sb.append("  e   = ").append(sci(E_CHARGE)).append(" C           Elementary charge\n");
             sb.append("  ε₀  = ").append(sci(EPSILON_0)).append(" F/m         Vacuum permittivity\n");
             sb.append("  μ₀  = ").append(sci(MU_0)).append(" H/m         Vacuum permeability\n");
             sb.append("  k_e = ").append(sci(1 / (4 * Math.PI * EPSILON_0))).append(" N⋅m²/C²    Coulomb's constant\n\n");
         }
-        if (all || q.contains("quantum") || q.contains("planck") || q.contains("electron") || q.contains("proton")) {
+        if (all || q.contains("quantum") || q.contains("planck") || q.contains("electron") || q.contains("proton")
+                || q.equals("h") || q.contains("avogadro") || q.contains("hbar") || q.contains("reduced")) {
             sb.append("QUANTUM & ATOMIC\n");
             sb.append("  h   = ").append(sci(H)).append(" J⋅s          Planck constant\n");
             sb.append("  ℏ   = ").append(sci(H_BAR)).append(" J⋅s          Reduced Planck (h/2π)\n");
@@ -67,7 +71,8 @@ public class PhysicsTool {
             sb.append("  mₚ  = ").append(sci(M_PROTON)).append(" kg          Proton mass\n");
             sb.append("  Nₐ  = ").append(sci(N_A)).append(" mol⁻¹       Avogadro's number\n\n");
         }
-        if (all || q.contains("thermo") || q.contains("boltzmann") || q.contains("stefan") || q.contains("gas")) {
+        if (all || q.contains("thermo") || q.contains("boltzmann") || q.contains("stefan") || q.contains("gas")
+                || q.equals("k") || q.equals("r") || q.contains("ideal gas")) {
             sb.append("THERMODYNAMICS\n");
             sb.append("  k_B = ").append(sci(K_B)).append(" J/K          Boltzmann constant\n");
             sb.append("  R   = ").append(R_GAS).append(" J/(mol⋅K)       Ideal gas constant\n");
@@ -76,7 +81,7 @@ public class PhysicsTool {
 
         if (sb.toString().endsWith("──────────────────\n\n")) {
             sb.append("No constants matched '").append(query).append("'.\n");
-            sb.append("Try: 'all', 'mechanics', 'electromagnetism', 'quantum', 'thermodynamics'");
+            sb.append("Try: 'all', 'g', 'G', 'c', 'h', 'mechanics', 'electromagnetism', 'quantum', 'thermodynamics'");
         }
 
         return sb.toString();
@@ -153,6 +158,51 @@ public class PhysicsTool {
             sb.append("\nError solving: ").append(e.getMessage());
         }
 
+        return sb.toString();
+    }
+
+    @Tool(name = "physics_projectile", description = "Solve 2D projectile motion problems. "
+            + "Given an initial speed and launch angle, computes horizontal range, maximum height, "
+            + "time of flight, and velocity components. Assumes flat ground and ignores air resistance. "
+            + "Useful for questions like: 'ball launched at 200 m/s at 45°, how far does it travel?'")
+    public String projectile(
+            @ToolParam(description = "Initial speed (magnitude of launch velocity) in m/s") Double speed,
+            @ToolParam(description = "Launch angle above the horizontal in degrees (0–90)") Double angleDeg,
+            @ToolParam(description = "Gravitational acceleration in m/s² (optional; defaults to Earth's g = 9.80665 m/s²). "
+                    + "Use 1.62 for Moon, 3.72 for Mars, 24.79 for Jupiter.", required = false) Double g) {
+
+        if (speed == null || angleDeg == null) return "Error: Provide initial speed and launch angle.";
+        if (speed < 0) return "Error: Speed must be non-negative.";
+        if (angleDeg < 0 || angleDeg > 90) return "Error: Angle must be between 0° and 90°.";
+
+        double gVal = (g != null && g > 0) ? g : G_EARTH;
+        double theta = Math.toRadians(angleDeg);
+        double vx = speed * Math.cos(theta);
+        double vy = speed * Math.sin(theta);
+        double timeOfFlight = 2.0 * vy / gVal;
+        double range = vx * timeOfFlight;
+        double maxHeight = (vy * vy) / (2.0 * gVal);
+        double timeToApex = vy / gVal;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("2D Projectile Motion\n");
+        sb.append("────────────────────\n\n");
+        sb.append("GIVEN:\n");
+        sb.append("  v₀ = ").append(fmt(speed)).append(" m/s\n");
+        sb.append("  θ  = ").append(fmt(angleDeg)).append("°\n");
+        sb.append("  g  = ").append(fmt(gVal)).append(" m/s²\n\n");
+        sb.append("VELOCITY COMPONENTS:\n");
+        sb.append("  vx = v₀·cos(θ) = ").append(fmt(vx)).append(" m/s  (horizontal)\n");
+        sb.append("  vy = v₀·sin(θ) = ").append(fmt(vy)).append(" m/s  (vertical at launch)\n\n");
+        sb.append("RESULTS:\n");
+        sb.append("  Horizontal range  R = v₀²·sin(2θ)/g = ").append(fmt(range)).append(" m\n");
+        sb.append("  Maximum height    H = vy²/(2g)       = ").append(fmt(maxHeight)).append(" m\n");
+        sb.append("  Time of flight    T = 2vy/g          = ").append(fmt(timeOfFlight)).append(" s\n");
+        sb.append("  Time to apex        = vy/g            = ").append(fmt(timeToApex)).append(" s\n\n");
+        sb.append("EQUATIONS:\n");
+        sb.append("  R = v₀²·sin(2θ)/g\n");
+        sb.append("  H = v₀²·sin²(θ)/(2g)\n");
+        sb.append("  T = 2·v₀·sin(θ)/g\n");
         return sb.toString();
     }
 
