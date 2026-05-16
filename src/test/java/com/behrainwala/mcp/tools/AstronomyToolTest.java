@@ -15,7 +15,6 @@ class AstronomyToolTest {
         tool = new AstronomyTool();
     }
 
-    // ── Planet Info ──
 
     @Nested
     class PlanetInfoTests {
@@ -104,7 +103,6 @@ class AstronomyToolTest {
         }
     }
 
-    // ── Star Properties ──
 
     @Nested
     class StarPropertiesTests {
@@ -218,7 +216,6 @@ class AstronomyToolTest {
         }
     }
 
-    // ── Orbital Mechanics ──
 
     @Nested
     class OrbitalMechanicsTests {
@@ -315,7 +312,6 @@ class AstronomyToolTest {
         }
     }
 
-    // ── Celestial Coordinates ──
 
     @Nested
     class CelestialCoordinatesTests {
@@ -449,7 +445,6 @@ class AstronomyToolTest {
         }
     }
 
-    // ── Moon Phase ──
 
     @Nested
     class MoonPhaseTests {
@@ -517,7 +512,6 @@ class AstronomyToolTest {
         }
     }
 
-    // ── Helper Methods ──
 
     @Nested
     class HelperTests {

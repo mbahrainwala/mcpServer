@@ -14,7 +14,6 @@ class EncodingToolTest {
         tool = new EncodingTool();
     }
 
-    // ── Base64 ───────────────────────────────────────────────────────────────
 
     @Test
     void base64_encode() {
@@ -36,7 +35,6 @@ class EncodingToolTest {
         assertThat(decoded).contains("Hello World");
     }
 
-    // ── URL ──────────────────────────────────────────────────────────────────
 
     @Test
     void url_encode() {
@@ -50,7 +48,6 @@ class EncodingToolTest {
         assertThat(result).contains("hello world&foo=bar");
     }
 
-    // ── HTML ─────────────────────────────────────────────────────────────────
 
     @Test
     void html_encode_allEntities() {
@@ -80,7 +77,6 @@ class EncodingToolTest {
         assertThat(result).contains("'");
     }
 
-    // ── Hex ──────────────────────────────────────────────────────────────────
 
     @Test
     void hex_encode() {
@@ -100,7 +96,6 @@ class EncodingToolTest {
         assertThat(result).contains("AB");
     }
 
-    // ── Unknown format ──────────────────────────────────────────────────────
 
     @Test
     void encodeDecode_unknownFormat_returnsError() {
@@ -108,7 +103,6 @@ class EncodingToolTest {
         assertThat(result).startsWith("Error:");
     }
 
-    // ── Direction parsing ────────────────────────────────────────────────────
 
     @Test
     void encodeDecode_directionStartsWithE_encodes() {
@@ -122,7 +116,6 @@ class EncodingToolTest {
         assertThat(result).contains("Decode");
     }
 
-    // ── Invalid base64 decode ────────────────────────────────────────────────
 
     @Test
     void base64_decode_invalid_returnsError() {
@@ -130,7 +123,6 @@ class EncodingToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── Truncation ───────────────────────────────────────────────────────────
 
     @Test
     void encodeDecode_longInput_truncated() {
@@ -139,7 +131,6 @@ class EncodingToolTest {
         assertThat(result).contains("truncated");
     }
 
-    // ── Hash ─────────────────────────────────────────────────────────────────
 
     @Test
     void hash_sha256_knownValue() {
@@ -219,7 +210,6 @@ class EncodingToolTest {
         assertThat(result).contains("256 bits");
     }
 
-    // ── UUID ─────────────────────────────────────────────────────────────────
 
     @Test
     void uuid_standard_format() {
@@ -287,7 +277,6 @@ class EncodingToolTest {
         assertThat(result).containsPattern("[0-9a-fA-F]{8}-");
     }
 
-    // ── Password ─────────────────────────────────────────────────────────────
 
     @Test
     void password_defaultLength16() {

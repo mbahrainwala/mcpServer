@@ -14,7 +14,6 @@ class JsonToolTest {
         tool = new JsonTool();
     }
 
-    // ── validateJson ─────────────────────────────────────────────────────────
 
     @Test
     void validateJson_validObject() {
@@ -80,7 +79,6 @@ class JsonToolTest {
         assertThat(result).contains("Total nodes:");
     }
 
-    // ── queryJson ────────────────────────────────────────────────────────────
 
     @Test
     void queryJson_topLevel() {
@@ -137,7 +135,6 @@ class JsonToolTest {
         assertThat(result).contains("more");
     }
 
-    // ── diffJson ─────────────────────────────────────────────────────────────
 
     @Test
     void diffJson_identical() {
@@ -199,7 +196,6 @@ class JsonToolTest {
         assertThat(result).contains("Invalid JSON:");
     }
 
-    // ── transformJson ────────────────────────────────────────────────────────
 
     @Test
     void transformJson_minify() {
@@ -270,7 +266,6 @@ class JsonToolTest {
         assertThat(result).contains("Minified");
     }
 
-    // ── fieldNames helper coverage ───────────────────────────────────────────
 
     @Test
     void queryJson_fieldNames_notObject() {

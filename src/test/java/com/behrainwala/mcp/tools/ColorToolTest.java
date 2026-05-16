@@ -24,7 +24,6 @@ class ColorToolTest {
     @Nested
     class ColorConvert {
 
-        // ── Input format parsing ────────────────────────────────────────────
 
         @Test
         void hex6Digit_toAll() {
@@ -98,7 +97,6 @@ class ColorToolTest {
             assertThat(result).contains("#0000FF");
         }
 
-        // ── Target format branches ──────────────────────────────────────────
 
         @Test
         void toFormat_hex() {
@@ -146,7 +144,6 @@ class ColorToolTest {
                     .contains("CMYK:");
         }
 
-        // ── Color name lookup (exact match) ─────────────────────────────────
 
         @Test
         void exactColorName_isAppended() {
@@ -168,7 +165,6 @@ class ColorToolTest {
             assertThat(result).contains("~Red (approximate)");
         }
 
-        // ── CMYK special case: black ────────────────────────────────────────
 
         @Test
         void cmykConversion_pureBlack() {
@@ -183,7 +179,6 @@ class ColorToolTest {
             assertThat(result).contains("cmyk(0.0%, 0.0%, 0.0%, 0.0%)");
         }
 
-        // ── HSL conversion: max == g and max == b branches ──────────────────
 
         @Test
         void hslConversion_greenDominant() {
@@ -221,7 +216,6 @@ class ColorToolTest {
             assertThat(result).contains("HSL:");
         }
 
-        // ── hslToRgb: saturation == 0 branch ───────────────────────────────
 
         @Test
         void hslInput_zeroSaturation_toRgb() {
@@ -230,7 +224,6 @@ class ColorToolTest {
             assertThat(result).contains("rgb(128, 128, 128)");
         }
 
-        // ── hueToRgb: all branches ─────────────────────────────────────────
 
         @Test
         void hueToRgb_coverAllBranches_orangeColor() {
@@ -246,7 +239,6 @@ class ColorToolTest {
             assertThat(result).contains("RGB:");
         }
 
-        // ── Error handling ──────────────────────────────────────────────────
 
         @Test
         void invalidHex_returnsError() {

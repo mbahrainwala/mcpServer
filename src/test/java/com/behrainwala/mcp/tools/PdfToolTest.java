@@ -36,7 +36,6 @@ class PdfToolTest {
         tool = new PdfTool();
     }
 
-    // ── pdfToText ────────────────────────────────────────────────────────────
 
     @Test
     void pdfToText_invalidPath_returnsError() {
@@ -137,7 +136,6 @@ class PdfToolTest {
         assertThat(result).contains(pdfFile.getAbsolutePath());
     }
 
-    // ── pdfMetadata ──────────────────────────────────────────────────────────
 
     @Test
     void pdfMetadata_invalidPath_returnsError() {
@@ -203,7 +201,6 @@ class PdfToolTest {
         assertThat(result).contains("Source           : " + pdfFile.getAbsolutePath());
     }
 
-    // ── Helper: formatSize coverage ──────────────────────────────────────────
 
     @Test
     void pdfMetadata_smallFile_showsBytes() throws Exception {
@@ -213,7 +210,6 @@ class PdfToolTest {
         assertThat(result).containsPattern("File Size\\s+: \\d+");
     }
 
-    // ── renderPagesToBase64Jpeg ────────────────────────────────────────────
 
     @Test
     void renderPagesToBase64Jpeg_validPdf_returnsBase64Images() throws Exception {
@@ -317,7 +313,6 @@ class PdfToolTest {
                 .hasMessageContaining("greater than endPage");
     }
 
-    // ── renderPagesToFiles ─────────────────────────────────────────────────
 
     @Test
     void renderPagesToFiles_validPdf_savesJpegFiles() throws Exception {
@@ -382,7 +377,6 @@ class PdfToolTest {
         assertThat(img).isNotNull();
     }
 
-    // ── OCR fallback ─────────────────────────────────────────────────────────
 
     @Test
     void pdfToText_blankPdfWithOcrAvailable_returnsOcrText() throws Exception {
@@ -449,7 +443,6 @@ class PdfToolTest {
         assertThat(result).contains("pdf_to_images");
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private File createTestPdf(String text) throws Exception {
         File pdfFile = tempDir.resolve("test_" + System.nanoTime() + ".pdf").toFile();

@@ -17,7 +17,6 @@ class ExcelFormulaToolTest {
         tool = new ExcelFormulaTool();
     }
 
-    // ── functionLookup ──
 
     @Nested
     class FunctionLookupTests {
@@ -160,7 +159,6 @@ class ExcelFormulaToolTest {
         }
     }
 
-    // ── explainFormula ──
 
     @Nested
     class ExplainFormulaTests {
@@ -357,7 +355,6 @@ class ExcelFormulaToolTest {
         }
     }
 
-    // ── buildFormula ──
 
     @Nested
     class BuildFormulaTests {
@@ -610,7 +607,6 @@ class ExcelFormulaToolTest {
         }
     }
 
-    // ── Helper method edge-case coverage ──
 
     @Nested
     class HelperMethodTests {

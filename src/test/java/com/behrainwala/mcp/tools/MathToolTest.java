@@ -15,7 +15,6 @@ class MathToolTest {
         tool = new MathTool();
     }
 
-    // ── calculate() method-level tests ──────────────────────────────────────
 
     @Nested
     class CalculateInputValidation {
@@ -77,7 +76,6 @@ class MathToolTest {
 
         @Test
         void divisionByZero_returnsInfinity() {
-            // IEEE 754: double division by zero gives Infinity, not an exception
             String result = tool.calculate("5 / 0");
             assertThat(result).containsAnyOf("Infinity", "∞", "Error");
         }
@@ -103,7 +101,6 @@ class MathToolTest {
 
         @Test
         void sin() {
-            // sin(PI/2) = 1
             String result = tool.calculate("sin(PI / 2)");
             assertThat(result).contains("1");
         }
@@ -250,15 +247,12 @@ class MathToolTest {
 
         @Test
         void securityCheck_rejectsUnsafeInput() {
-            // Characters that fail the regex cause a fallback to evaluateSimple
-            // which will also fail for truly invalid input
             String result = tool.calculate("System.exit(0)");
             // The regex check will fail; it falls to evaluateSimple which also fails
             assertThat(result).containsIgnoringCase("error");
         }
     }
 
-    // ── ExpressionParser direct tests ───────────────────────────────────────
 
     @Nested
     class ExpressionParserTests {
@@ -311,7 +305,6 @@ class MathToolTest {
 
         @Test
         void doubleUnaryMinus() {
-            // --5 => -(-5) = 5
             assertThat(new MathTool.ExpressionParser("--5").parse()).isEqualTo(5.0);
         }
 

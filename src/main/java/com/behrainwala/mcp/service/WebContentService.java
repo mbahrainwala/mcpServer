@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.regex.Pattern;
+
 /**
  * Fetches and extracts readable text content from web pages.
  * Uses Jsoup for HTML parsing and content extraction.
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 public class WebContentService {
 
     private static final Logger log = LoggerFactory.getLogger(WebContentService.class);
+    private static final Pattern LARGE_GAPS   = Pattern.compile("\\s{3,}");
+    private static final Pattern EXTRA_SPACES = Pattern.compile("[ \\t]{2,}");
 
     private final McpProperties properties;
 
@@ -95,9 +99,8 @@ public class WebContentService {
      * Cleans extracted text by normalizing whitespace.
      */
     private String cleanText(String text) {
-        return text
-                .replaceAll("\\s{3,}", "\n\n")  // Collapse large whitespace gaps
-                .replaceAll("[ \\t]{2,}", " ")    // Normalize spaces
+        return EXTRA_SPACES.matcher(LARGE_GAPS.matcher(text).replaceAll("\n\n"))
+                .replaceAll(" ")
                 .strip();
     }
 }

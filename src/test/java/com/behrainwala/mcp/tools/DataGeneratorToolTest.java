@@ -102,7 +102,6 @@ class DataGeneratorToolTest {
     @Nested
     class GenerateFakeData {
 
-        // ── valid field coverage ────────────────────────────────────────────
 
         @Test
         void nameField_text() {
@@ -163,7 +162,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("Record 1");
         }
 
-        // ── format variants ─────────────────────────────────────────────────
 
         @Test
         void csvFormat_hasHeaderAndRows() {
@@ -196,7 +194,6 @@ class DataGeneratorToolTest {
             assertThat(result).containsIgnoringCase("error").contains("xml");
         }
 
-        // ── error paths ─────────────────────────────────────────────────────
 
         @Test
         void countZero_returnsError() {
@@ -248,7 +245,6 @@ class DataGeneratorToolTest {
     @Nested
     class GenerateTestDataset {
 
-        // ── column types ────────────────────────────────────────────────────
 
         @Test
         void intColumn_csv() {
@@ -328,7 +324,6 @@ class DataGeneratorToolTest {
                     .contains("salary").contains("active").contains("hired");
         }
 
-        // ── output formats ──────────────────────────────────────────────────
 
         @Test
         void jsonFormat() {
@@ -378,7 +373,6 @@ class DataGeneratorToolTest {
             assertThat(result).containsIgnoringCase("error").contains("xml");
         }
 
-        // ── error paths ─────────────────────────────────────────────────────
 
         @Test
         void rowsZero_returnsError() {
@@ -543,7 +537,6 @@ class DataGeneratorToolTest {
             assertThat(result).containsIgnoringCase("error").contains("binary");
         }
 
-        // ── count boundary errors ───────────────────────────────────────────
 
         @Test
         void countZero_returnsError() {
@@ -563,7 +556,6 @@ class DataGeneratorToolTest {
             assertThat(result).containsIgnoringCase("error");
         }
 
-        // ── length edge cases ───────────────────────────────────────────────
 
         @Test
         void invalidLength_returnsError() {
@@ -596,7 +588,6 @@ class DataGeneratorToolTest {
             assertThat(result).doesNotContainIgnoringCase("error");
         }
 
-        // ── boundary valid counts ───────────────────────────────────────────
 
         @Test
         void countOne_isValid() {
@@ -625,7 +616,6 @@ class DataGeneratorToolTest {
     @Nested
     class GenerateSequence {
 
-        // ── arithmetic ──────────────────────────────────────────────────────
 
         @Test
         void arithmetic_defaultStartAndStep() {
@@ -645,7 +635,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("Arithmetic Sequence");
         }
 
-        // ── geometric ───────────────────────────────────────────────────────
 
         @Test
         void geometric_defaultStartAndRatio() {
@@ -667,7 +656,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("Geometric Sequence");
         }
 
-        // ── fibonacci ───────────────────────────────────────────────────────
 
         @Test
         void fibonacci_first8() {
@@ -683,7 +671,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("0");
         }
 
-        // ── dates ───────────────────────────────────────────────────────────
 
         @Test
         void dates_customStartAndStep() {
@@ -703,7 +690,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("Date Sequence").contains("interval=1 day(s)");
         }
 
-        // ── timestamps ──────────────────────────────────────────────────────
 
         @Test
         void timestamps_customStartAndStep() {
@@ -725,7 +711,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("Timestamp Sequence");
         }
 
-        // ── ids ─────────────────────────────────────────────────────────────
 
         @Test
         void ids_customPrefixAndStart() {
@@ -759,7 +744,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("X-09998").contains("X-10002");
         }
 
-        // ── error paths ─────────────────────────────────────────────────────
 
         @Test
         void unknownType_returnsError() {
@@ -803,7 +787,6 @@ class DataGeneratorToolTest {
             assertThat(result).containsIgnoringCase("error");
         }
 
-        // ── formatNum coverage ──────────────────────────────────────────────
 
         @Test
         void arithmetic_fractionalStep_showsDecimals() {
@@ -819,7 +802,6 @@ class DataGeneratorToolTest {
             assertThat(result).contains("0.5");
         }
 
-        // ── boundary valid count ────────────────────────────────────────────
 
         @Test
         void count1_isValid() {

@@ -15,7 +15,6 @@ class ExcelDataToolTest {
         tool = new ExcelDataTool();
     }
 
-    // ── analyzeData ─────────────────────────────────────────
 
     @Nested
     class AnalyzeDataTests {
@@ -216,7 +215,6 @@ class ExcelDataToolTest {
         }
     }
 
-    // ── chartRecommend ──────────────────────────────────────
 
     @Nested
     class ChartRecommendTests {
@@ -424,7 +422,6 @@ class ExcelDataToolTest {
         }
     }
 
-    // ── conditionalFormat ───────────────────────────────────
 
     @Nested
     class ConditionalFormatTests {
@@ -562,7 +559,6 @@ class ExcelDataToolTest {
         }
     }
 
-    // ── pivotGuide ──────────────────────────────────────────
 
     @Nested
     class PivotGuideTests {
@@ -652,7 +648,6 @@ class ExcelDataToolTest {
         }
     }
 
-    // ── vbaSnippet ──────────────────────────────────────────
 
     @Nested
     class VbaSnippetTests {
@@ -759,7 +754,6 @@ class ExcelDataToolTest {
         }
     }
 
-    // ── shortcutReference ───────────────────────────────────
 
     @Nested
     class ShortcutReferenceTests {

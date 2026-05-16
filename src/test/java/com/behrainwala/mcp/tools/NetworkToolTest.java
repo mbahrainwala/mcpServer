@@ -14,7 +14,6 @@ class NetworkToolTest {
         tool = new NetworkTool();
     }
 
-    // ── subnetCalculator ─────────────────────────────────────────────────────
 
     @Test
     void subnetCalculator_slash24() {
@@ -118,7 +117,6 @@ class NetworkToolTest {
         assertThat(result).contains("192.168.1.0/24").contains("Subnet Calculator Results");
     }
 
-    // ── ipInfo ───────────────────────────────────────────────────────────────
 
     @Test
     void ipInfo_classA_private_10() {
@@ -247,7 +245,6 @@ class NetworkToolTest {
         assertThat(result).contains("Type:            Public");
     }
 
-    // ── cidrRange ────────────────────────────────────────────────────────────
 
     @Test
     void cidrRange_slash30() {
@@ -321,7 +318,6 @@ class NetworkToolTest {
                 .contains("[BROADCAST]");
     }
 
-    // ── portReference ────────────────────────────────────────────────────────
 
     @Test
     void portReference_byPortNumber_http() {
@@ -395,7 +391,6 @@ class NetworkToolTest {
         assertThat(result).contains("result(s)");
     }
 
-    // ── subnetCompare ────────────────────────────────────────────────────────
 
     @Test
     void subnetCompare_sameNetwork_cidrNotation() {

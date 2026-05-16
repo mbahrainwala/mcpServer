@@ -29,6 +29,7 @@ public class McpServerConfig {
             // Web tools
             WebSearchTool webSearchTool,
             WebContentFetcherTool webContentFetcherTool,
+            WebResearchTool webResearchTool,
             // Math tools
             MathTool mathTool,
             AdvancedMathTool advancedMathTool,
@@ -56,12 +57,15 @@ public class McpServerConfig {
             PdfTool pdfTool,
             ImageTool imageTool,
             DocumentTool documentTool,
-            ExcelTool excelTool) {
+            ExcelTool excelTool,
+            // Data tools
+            CsvTool csvTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
                         webSearchTool,
                         webContentFetcherTool,
+                        webResearchTool,
                         mathTool,
                         advancedMathTool,
                         calculusTool,
@@ -83,7 +87,8 @@ public class McpServerConfig {
                         pdfTool,
                         imageTool,
                         documentTool,
-                        excelTool
+                        excelTool,
+                        csvTool
                 )
                 .build();
     }

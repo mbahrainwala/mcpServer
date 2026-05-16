@@ -7,12 +7,38 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-/**
- * MCP tool for precise mathematical calculations.
- * LLMs frequently make arithmetic errors — this tool provides exact results.
- */
 @Service
 public class MathTool {
+
+    @Tool(name = "batch_calculate", description = "Evaluate multiple mathematical expressions in a single call. "
+            + "Saves round-trips when you need several calculations. "
+            + "Separate expressions with newlines or semicolons. "
+            + "Example: '2 + 3 * 4; sqrt(144); 2^10' returns all three results at once.")
+    public String batchCalculate(
+            @ToolParam(description = "Expressions separated by newlines or semicolons. "
+                    + "Each expression uses the same syntax as calculate(): "
+                    + "+, -, *, /, ^, sqrt(), sin(), cos(), log(), PI, etc.") String expressions) {
+
+        if (expressions == null || expressions.isBlank()) {
+            return "Error: expressions required";
+        }
+
+        String[] lines = expressions.split("[;\n]");
+        StringBuilder sb = new StringBuilder();
+        int idx = 1;
+        for (String line : lines) {
+            String expr = line.strip();
+            if (expr.isEmpty()) continue;
+            sb.append(idx++).append(". ").append(expr).append(" = ");
+            try {
+                sb.append(formatNumber(new ExpressionParser(expr).parse()));
+            } catch (Exception e) {
+                sb.append("Error: ").append(e.getMessage());
+            }
+            sb.append("\n");
+        }
+        return sb.toString().stripTrailing();
+    }
 
     @Tool(name = "calculate", description = "Evaluate a mathematical expression and return the exact result. "
             + "Use this tool for ANY arithmetic, algebra, or numeric computation to avoid calculation errors. "
@@ -27,87 +53,31 @@ public class MathTool {
         }
 
         try {
-            // Sanitize: only allow safe math characters
-            String sanitized = expression.strip();
-
-            // Replace common math notation with Java equivalents
-            String prepared = sanitized
-                    .replace("^", "**")           // power notation
-                    .replace("PI", String.valueOf(Math.PI))
-                    .replace("pi", String.valueOf(Math.PI))
-                    .replace("E", String.valueOf(Math.E))
-                    .replace("sqrt(", "Math.sqrt(")
-                    .replace("abs(", "Math.abs(")
-                    .replace("sin(", "Math.sin(")
-                    .replace("cos(", "Math.cos(")
-                    .replace("tan(", "Math.tan(")
-                    .replace("log(", "Math.log(")
-                    .replace("log10(", "Math.log10(")
-                    .replace("ceil(", "Math.ceil(")
-                    .replace("floor(", "Math.floor(")
-                    .replace("round(", "Math.round(")
-                    .replace("min(", "Math.min(")
-                    .replace("max(", "Math.max(")
-                    .replace("**", "Math.pow")    // convert power: a**b -> Math.pow(a,b) won't work directly
-                    ;
-
-            // Handle power expressions: convert "a ** b" style to Math.pow(a, b)
-            prepared = convertPowerExpressions(prepared);
-
-            // Security check: reject anything that isn't math
-            if (!prepared.matches("[0-9Math.\\s+\\-*/(),%.<>:?_powsqrtabsincotaglerflumd]+")) {
-                // Fallback: try simple expression evaluation
-                return evaluateSimple(sanitized);
-            }
-
-            // Use Nashorn-compatible evaluation via runtime compilation
-            Object result = evaluateExpression(prepared);
-            return "Expression: " + expression + "\nResult: " + result;
-
+            double result = new ExpressionParser(expression.strip()).parse();
+            return "Expression: " + expression + "\nResult: " + formatNumber(result);
         } catch (Exception e) {
-            // Fallback to simple evaluation
-            try {
-                return evaluateSimple(expression.strip());
-            } catch (Exception e2) {
-                return "Error evaluating '" + expression + "': " + e2.getMessage();
-            }
+            return "Error evaluating '" + expression + "': " + e.getMessage();
         }
     }
 
-    /**
-     * Evaluates mathematical expressions using Java's built-in capabilities.
-     */
-    private Object evaluateExpression(String expr) throws Exception {
-        // Use a simple recursive descent parser for safety
-        return new ExpressionParser(expr).parse();
-    }
-
-    private String evaluateSimple(String expression) {
-        try {
-            double result = new ExpressionParser(expression).parse();
-            // Format: remove trailing zeros
-            if (result == Math.floor(result) && !Double.isInfinite(result)) {
-                return "Expression: " + expression + "\nResult: " + (long) result;
-            }
-            return "Expression: " + expression + "\nResult: " + BigDecimal.valueOf(result)
-                    .round(new MathContext(15))
-                    .stripTrailingZeros()
-                    .toPlainString();
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot evaluate: " + expression + " — " + e.getMessage());
+    static String formatNumber(double result) {
+        if (result == Math.floor(result) && !Double.isInfinite(result)) {
+            return String.valueOf((long) result);
         }
-    }
-
-    private String convertPowerExpressions(String expr) {
-        // Simple pass-through; the ExpressionParser handles ^ directly
-        return expr.replace("Math.pow", "**");
+        return BigDecimal.valueOf(result)
+                .round(new MathContext(15))
+                .stripTrailingZeros()
+                .toPlainString();
     }
 
     /**
-     * A safe recursive-descent math expression parser.
-     * Supports: numbers, +, -, *, /, %, ^ (power), parentheses, and common math functions.
+     * Safe recursive-descent parser supporting: +, -, *, /, %, ^ (power),
+     * parentheses, unary minus/plus, and common math functions.
      */
     static class ExpressionParser {
+        private static final String[] FUNCTIONS =
+                {"sqrt", "abs", "sin", "cos", "tan", "log10", "log", "ceil", "floor", "round", "min", "max"};
+
         private final String input;
         private int pos;
 
@@ -115,7 +85,8 @@ public class MathTool {
             this.input = input.replaceAll("\\s+", "")
                     .replace("**", "^")
                     .replace("PI", String.valueOf(Math.PI))
-                    .replace("pi", String.valueOf(Math.PI));
+                    .replace("pi", String.valueOf(Math.PI))
+                    .replace("E", String.valueOf(Math.E));
             this.pos = 0;
         }
 
@@ -161,55 +132,40 @@ public class MathTool {
         }
 
         private double parseUnary() {
-            if (pos < input.length() && input.charAt(pos) == '-') {
-                pos++;
-                return -parseUnary();
-            }
-            if (pos < input.length() && input.charAt(pos) == '+') {
-                pos++;
-                return parseUnary();
-            }
+            if (pos < input.length() && input.charAt(pos) == '-') { pos++; return -parseUnary(); }
+            if (pos < input.length() && input.charAt(pos) == '+') { pos++; return parseUnary(); }
             return parsePrimary();
         }
 
         private double parsePrimary() {
             if (pos < input.length() && input.charAt(pos) == '(') {
-                pos++; // skip '('
+                pos++;
                 double result = parseExpression();
-                if (pos < input.length() && input.charAt(pos) == ')') pos++; // skip ')'
+                if (pos < input.length() && input.charAt(pos) == ')') pos++;
                 return result;
             }
 
-            // Check for function names
-            String[] functions = {"sqrt", "abs", "sin", "cos", "tan", "log10", "log", "ceil", "floor", "round", "min", "max"};
-            for (String func : functions) {
+            for (String func : FUNCTIONS) {
                 if (input.startsWith(func + "(", pos) || input.startsWith("Math." + func + "(", pos)) {
                     if (input.startsWith("Math.", pos)) pos += 5;
-                    pos += func.length();
-                    pos++; // skip '('
+                    pos += func.length() + 1;
 
                     double arg1 = parseExpression();
                     double arg2 = Double.NaN;
-
                     if (pos < input.length() && input.charAt(pos) == ',') {
-                        pos++; // skip ','
+                        pos++;
                         arg2 = parseExpression();
                     }
-
-                    if (pos < input.length() && input.charAt(pos) == ')') pos++; // skip ')'
-
+                    if (pos < input.length() && input.charAt(pos) == ')') pos++;
                     return applyFunction(func, arg1, arg2);
                 }
             }
 
-            // Parse number
             int start = pos;
             while (pos < input.length() && (Character.isDigit(input.charAt(pos)) || input.charAt(pos) == '.')) {
                 pos++;
             }
-            if (pos == start) {
-                throw new RuntimeException("Expected number at position " + pos);
-            }
+            if (pos == start) throw new RuntimeException("Expected number at position " + pos);
             return Double.parseDouble(input.substring(start, pos));
         }
 

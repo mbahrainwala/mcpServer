@@ -14,7 +14,6 @@ class TextToolTest {
         tool = new TextTool();
     }
 
-    // ── diffText ─────────────────────────────────────────────────────────────
 
     @Test
     void diffText_identical() {
@@ -66,7 +65,6 @@ class TextToolTest {
                 .contains("Modified: 2");
     }
 
-    // ── analyzeText ──────────────────────────────────────────────────────────
 
     @Test
     void analyzeText_nullInput_returnsError() {
@@ -147,7 +145,6 @@ class TextToolTest {
         assertThat(result).contains("Unique words:");
     }
 
-    // ── transformText case conversions ────────────────────────────────────────
 
     @Test
     void transformText_camel() {
@@ -251,7 +248,6 @@ class TextToolTest {
         assertThat(result).contains("hello");
     }
 
-    // ── transformText line operations ─────────────────────────────────────────
 
     @Test
     void transformText_sort() {
@@ -299,7 +295,6 @@ class TextToolTest {
         assertThat(result).contains("Trimmed Lines:\nhello\nworld");
     }
 
-    // ── transformText text operations ─────────────────────────────────────────
 
     @Test
     void transformText_reverse() {
@@ -307,7 +302,6 @@ class TextToolTest {
         assertThat(result).contains("olleh").contains("Reversed:");
     }
 
-    // ── transformText unknown ─────────────────────────────────────────────────
 
     @Test
     void transformText_unknownOp() {
@@ -315,7 +309,6 @@ class TextToolTest {
         assertThat(result).contains("Unknown operation");
     }
 
-    // ── splitIdentifier edge cases ───────────────────────────────────────────
 
     @Test
     void transformText_camelFromHyphenated() {

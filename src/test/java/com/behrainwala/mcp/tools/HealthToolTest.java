@@ -14,7 +14,6 @@ class HealthToolTest {
         tool = new HealthTool();
     }
 
-    // ── healthBmi ────────────────────────────────────────────────────────────
 
     @Test
     void healthBmi_normalWeight() {
@@ -96,7 +95,6 @@ class HealthToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── healthBmr ────────────────────────────────────────────────────────────
 
     @Test
     void healthBmr_male_sedentary() {
@@ -170,7 +168,6 @@ class HealthToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── healthMacroCalculator ────────────────────────────────────────────────
 
     @Test
     void healthMacro_maintenance() {
@@ -246,7 +243,6 @@ class HealthToolTest {
         assertThat(result).contains("150 g").contains("200 g");
     }
 
-    // ── healthHeartRateZones ─────────────────────────────────────────────────
 
     @Test
     void healthHeartRate_age30_rhr60() {
@@ -299,7 +295,6 @@ class HealthToolTest {
         assertThat(result).contains("Disclaimer");
     }
 
-    // ── healthHydration ──────────────────────────────────────────────────────
 
     @Test
     void healthHydration_sedentary_temperate() {
@@ -376,7 +371,6 @@ class HealthToolTest {
         assertThat(result).contains("Disclaimer");
     }
 
-    // ── healthBodyFatEstimate ────────────────────────────────────────────────
 
     @Test
     void healthBodyFat_male_averageCategory() {

@@ -18,13 +18,13 @@ class WebContentFetcherToolTest {
 
     @Test
     void fetch_blankUrl_returnsError() {
-        String result = tool.fetch("");
+        String result = tool.fetch("", null);
         assertThat(result).containsIgnoringCase("error").containsIgnoringCase("url");
     }
 
     @Test
     void fetch_nullUrl_returnsError() {
-        String result = tool.fetch(null);
+        String result = tool.fetch(null, null);
         assertThat(result).containsIgnoringCase("error").containsIgnoringCase("url");
     }
 
@@ -32,7 +32,7 @@ class WebContentFetcherToolTest {
     void fetch_schemePrependedForBareHost() {
         // If we pass a bare host, https:// gets prepended before attempt
         // It will fail with a network error, but not an NPE or schema error
-        String result = tool.fetch("this.host.does.not.exist.example.invalid");
+        String result = tool.fetch("this.host.does.not.exist.example.invalid", null);
         assertThat(result).isNotNull().doesNotContainIgnoringCase("NullPointer");
     }
 }

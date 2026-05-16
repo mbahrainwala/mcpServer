@@ -14,7 +14,6 @@ class UnitConverterToolTest {
         tool = new UnitConverterTool();
     }
 
-    // ── Length ───────────────────────────────────────────────────────────────
 
     @Test
     void convert_kmToMiles() {
@@ -52,7 +51,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("1.85");
     }
 
-    // ── Weight ───────────────────────────────────────────────────────────────
 
     @Test
     void convert_kgToLbs() {
@@ -90,7 +88,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("1");
     }
 
-    // ── Temperature ──────────────────────────────────────────────────────────
 
     @Test
     void convert_celsiusToFahrenheit() {
@@ -146,7 +143,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("212.00");
     }
 
-    // ── Volume ───────────────────────────────────────────────────────────────
 
     @Test
     void convert_litersToGallons() {
@@ -190,7 +186,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("29.5");
     }
 
-    // ── Speed ────────────────────────────────────────────────────────────────
 
     @Test
     void convert_kphToMph() {
@@ -216,7 +211,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("1");
     }
 
-    // ── Area ─────────────────────────────────────────────────────────────────
 
     @Test
     void convert_acresToSqM() {
@@ -236,7 +230,6 @@ class UnitConverterToolTest {
         assertThat(result).isNotBlank();
     }
 
-    // ── Time ─────────────────────────────────────────────────────────────────
 
     @Test
     void convert_hoursToMinutes() {
@@ -274,7 +267,6 @@ class UnitConverterToolTest {
         assertThat(result).isNotBlank();
     }
 
-    // ── Data ─────────────────────────────────────────────────────────────────
 
     @Test
     void convert_gbToMb() {
@@ -300,7 +292,6 @@ class UnitConverterToolTest {
         assertThat(result).contains("1024");
     }
 
-    // ── Error handling ───────────────────────────────────────────────────────
 
     @Test
     void convert_incompatibleUnits_returnsError() {

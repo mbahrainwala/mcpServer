@@ -14,7 +14,6 @@ class PhysicsToolTest {
         tool = new PhysicsTool();
     }
 
-    // ── physicsConstants ─────────────────────────────────────────────────────
 
     @Test
     void physicsConstants_all_containsAllCategories() {
@@ -129,46 +128,39 @@ class PhysicsToolTest {
         assertThat(result).contains("No constants matched");
     }
 
-    // ── kinematics ───────────────────────────────────────────────────────────
 
     @Test
     void kinematics_solveForV_givenUAT() {
-        // v = u + at = 0 + 10*5 = 50
         String result = tool.kinematics(null, 0.0, null, 10.0, 5.0);
         assertThat(result).contains("50").contains("SUVAT");
     }
 
     @Test
     void kinematics_solveForU_givenVAT() {
-        // u = v - at = 50 - 10*5 = 0
         String result = tool.kinematics(null, null, 50.0, 10.0, 5.0);
         assertThat(result).contains("u = 0");
     }
 
     @Test
     void kinematics_solveForA_givenUVT() {
-        // a = (v - u)/t = (20 - 0)/4 = 5
         String result = tool.kinematics(null, 0.0, 20.0, null, 4.0);
         assertThat(result).contains("a = 5");
     }
 
     @Test
     void kinematics_solveForT_givenUVA() {
-        // t = (v - u)/a = (20 - 0)/4 = 5
         String result = tool.kinematics(null, 0.0, 20.0, 4.0, null);
         assertThat(result).contains("t = 5");
     }
 
     @Test
     void kinematics_solveForS_givenUAT() {
-        // s = ut + 0.5*a*t^2 = 0*5 + 0.5*10*25 = 125
         String result = tool.kinematics(null, 0.0, null, 10.0, 5.0);
         assertThat(result).contains("125");
     }
 
     @Test
     void kinematics_solveForU_givenSAT() {
-        // u = (s - 0.5*a*t^2)/t = (125 - 0.5*10*25)/5 = 0
         String result = tool.kinematics(125.0, null, null, 10.0, 5.0);
         assertThat(result).contains("u = 0");
     }
@@ -182,21 +174,18 @@ class PhysicsToolTest {
 
     @Test
     void kinematics_solveForS_givenUVA() {
-        // s = (v^2 - u^2) / (2a) = (2500 - 0) / 20 = 125
         String result = tool.kinematics(null, 0.0, 50.0, 10.0, null);
         assertThat(result).contains("125");
     }
 
     @Test
     void kinematics_solveForT_givenUVS() {
-        // t = 2s/(u+v) = 2*125/(0+50) = 5
         String result = tool.kinematics(125.0, 0.0, 50.0, null, null);
         assertThat(result).contains("5");
     }
 
     @Test
     void kinematics_solveForS_givenUVT() {
-        // s = 0.5*(u+v)*t = 0.5*(0+50)*5 = 125
         String result = tool.kinematics(null, 0.0, 50.0, null, 5.0);
         assertThat(result).contains("125");
     }
@@ -220,7 +209,6 @@ class PhysicsToolTest {
         assertThat(result).contains("v =");
     }
 
-    // ── forces ───────────────────────────────────────────────────────────────
 
     @Test
     void forces_newton_Fma() {
@@ -254,28 +242,24 @@ class PhysicsToolTest {
 
     @Test
     void forces_centripetal() {
-        // F = mv^2/r = 2*100/5 = 40
         String result = tool.forces("centripetal", "2,10,5");
         assertThat(result).contains("40").contains("Centripetal");
     }
 
     @Test
     void forces_spring() {
-        // F = -kx = -200*0.05 = -10, PE = 0.5*200*0.0025 = 0.25
         String result = tool.forces("spring", "200,0.05");
         assertThat(result).contains("-10").contains("Hooke");
     }
 
     @Test
     void forces_work() {
-        // W = Fd cos(0) = 100*5*1 = 500
         String result = tool.forces("work", "100,5,0");
         assertThat(result).contains("500").contains("Work");
     }
 
     @Test
     void forces_kineticEnergy() {
-        // KE = 0.5*2*100 = 100
         String result = tool.forces("kinetic_energy", "2,10");
         assertThat(result).contains("100").contains("Kinetic Energy");
     }
@@ -288,14 +272,12 @@ class PhysicsToolTest {
 
     @Test
     void forces_potentialEnergy_defaultG() {
-        // PE = mgh = 5*9.80665*10
         String result = tool.forces("potential_energy", "5,10");
         assertThat(result).contains("Potential Energy");
     }
 
     @Test
     void forces_potentialEnergy_customG() {
-        // PE = mgh = 5*1.62*10 = 81
         String result = tool.forces("pe", "5,10,1.62");
         assertThat(result).contains("81").contains("Potential Energy");
     }
@@ -330,11 +312,9 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── waves ────────────────────────────────────────────────────────────────
 
     @Test
     void waves_waveSpeed() {
-        // v = f*lambda = 440*0.78 = 343.2
         String result = tool.waves("wave_speed", "440,0.78");
         assertThat(result).contains("Wave Speed").contains("343.2");
     }
@@ -407,7 +387,6 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── electricity ──────────────────────────────────────────────────────────
 
     @Test
     void electricity_ohm() {
@@ -417,7 +396,6 @@ class PhysicsToolTest {
 
     @Test
     void electricity_power() {
-        // P = IV = 2*5 = 10
         String result = tool.electricity("power", "2,5");
         assertThat(result).contains("10").contains("Electrical Power");
     }
@@ -449,7 +427,6 @@ class PhysicsToolTest {
 
     @Test
     void electricity_capacitance() {
-        // C = Q/V = 0.001/5 = 0.0002
         String result = tool.electricity("capacitance", "0.001,5");
         assertThat(result).contains("Capacitance");
     }
@@ -468,21 +445,18 @@ class PhysicsToolTest {
 
     @Test
     void electricity_rcCircuit() {
-        // tau = RC = 1000*0.001 = 1
         String result = tool.electricity("rc_circuit", "1000,0.001");
         assertThat(result).contains("RC Circuit");
     }
 
     @Test
     void electricity_rlCircuit() {
-        // tau = L/R = 0.1/100 = 0.001
         String result = tool.electricity("rl_circuit", "0.1,100");
         assertThat(result).contains("RL Circuit");
     }
 
     @Test
     void electricity_energyCapacitor() {
-        // U = 0.5*C*V^2 = 0.5*0.001*100 = 0.05
         String result = tool.electricity("energy_capacitor", "0.001,10");
         assertThat(result).contains("Energy Stored");
     }
@@ -499,11 +473,9 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── thermodynamics ───────────────────────────────────────────────────────
 
     @Test
     void thermodynamics_idealGas() {
-        // PV = nRT, given P=101325, V=0.0224, T=273.15 => n ~= 1
         String result = tool.thermodynamics("ideal_gas", "101325,0.0224,273.15");
         assertThat(result).contains("Ideal Gas Law");
     }
@@ -516,7 +488,6 @@ class PhysicsToolTest {
 
     @Test
     void thermodynamics_heatTransfer() {
-        // Q = mcDT = 1*4186*10 = 41860
         String result = tool.thermodynamics("heat_transfer", "1,4186,10");
         assertThat(result).contains("41860").contains("Heat Transfer");
     }
@@ -529,7 +500,6 @@ class PhysicsToolTest {
 
     @Test
     void thermodynamics_carnot() {
-        // eta = 1 - Tc/Th = 1 - 300/600 = 0.5 = 50%
         String result = tool.thermodynamics("carnot", "300,600");
         assertThat(result).contains("50").contains("Carnot");
     }
@@ -542,14 +512,12 @@ class PhysicsToolTest {
 
     @Test
     void thermodynamics_entropy() {
-        // DS = Q/T = 1000/300
         String result = tool.thermodynamics("entropy", "1000,300");
         assertThat(result).contains("Entropy");
     }
 
     @Test
     void thermodynamics_latentHeat() {
-        // Q = mL = 2*334000 = 668000
         String result = tool.thermodynamics("latent_heat", "2,334000");
         assertThat(result).contains("668000").contains("Latent Heat");
     }
@@ -566,7 +534,6 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── physics_constants — short symbol queries ─────────────────────────────
 
     @Test
     void physicsConstants_symbolG_returnsMechanics() {
@@ -598,12 +565,9 @@ class PhysicsToolTest {
                 .contains("THERMODYNAMICS");
     }
 
-    // ── projectile motion ─────────────────────────────────────────────────────
 
     @Test
     void projectile_45deg_200ms_earthG() {
-        // R = v²sin(2θ)/g = 200²*sin(90)/9.80665 ≈ 4077.7 m
-        // H = v²sin²(θ)/(2g) = 200²*0.5/(2*9.80665) ≈ 1019.4 m
         String result = tool.projectile(200.0, 45.0, null);
         assertThat(result)
                 .contains("2D Projectile Motion")
@@ -654,7 +618,6 @@ class PhysicsToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── fmt edge cases ───────────────────────────────────────────────────────
 
     @Test
     void forces_worksWithNaN_inOutput() {

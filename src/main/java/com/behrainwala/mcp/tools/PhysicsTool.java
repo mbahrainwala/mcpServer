@@ -16,21 +16,21 @@ public class PhysicsTool {
 
     private static final MathContext MC = new MathContext(12);
 
-    // ── Physical Constants ──
-    private static final double C = 299_792_458;           // speed of light (m/s)
-    private static final double G = 6.67430e-11;           // gravitational constant (N⋅m²/kg²)
-    private static final double H = 6.62607015e-34;        // Planck constant (J⋅s)
-    private static final double H_BAR = H / (2 * Math.PI); // reduced Planck
-    private static final double K_B = 1.380649e-23;        // Boltzmann constant (J/K)
-    private static final double N_A = 6.02214076e23;       // Avogadro's number
-    private static final double E_CHARGE = 1.602176634e-19; // elementary charge (C)
-    private static final double EPSILON_0 = 8.8541878128e-12; // vacuum permittivity (F/m)
-    private static final double MU_0 = 1.25663706212e-6;   // vacuum permeability (H/m)
-    private static final double M_ELECTRON = 9.1093837015e-31; // electron mass (kg)
-    private static final double M_PROTON = 1.67262192369e-27;  // proton mass (kg)
-    private static final double SIGMA = 5.670374419e-8;    // Stefan–Boltzmann constant (W/m²⋅K⁴)
-    private static final double R_GAS = 8.314462618;       // gas constant (J/mol⋅K)
-    private static final double G_EARTH = 9.80665;         // standard gravity (m/s²)
+    private static final double C         = 299_792_458;           // speed of light (m/s)
+    private static final double G         = 6.67430e-11;           // gravitational constant (N⋅m²/kg²)
+    private static final double H         = 6.62607015e-34;        // Planck constant (J⋅s)
+    private static final double H_BAR     = H / (2 * Math.PI);    // reduced Planck
+    private static final double K_B       = 1.380649e-23;          // Boltzmann constant (J/K)
+    private static final double N_A       = 6.02214076e23;         // Avogadro's number
+    private static final double E_CHARGE  = 1.602176634e-19;       // elementary charge (C)
+    private static final double EPSILON_0 = 8.8541878128e-12;      // vacuum permittivity (F/m)
+    private static final double MU_0      = 1.25663706212e-6;      // vacuum permeability (H/m)
+    private static final double M_ELECTRON= 9.1093837015e-31;      // electron mass (kg)
+    private static final double M_PROTON  = 1.67262192369e-27;     // proton mass (kg)
+    private static final double SIGMA     = 5.670374419e-8;        // Stefan–Boltzmann constant (W/m²⋅K⁴)
+    private static final double R_GAS     = 8.314462618;           // gas constant (J/mol⋅K)
+    private static final double G_EARTH   = 9.80665;               // standard gravity (m/s²)
+    private static final double K_E       = 1.0 / (4 * Math.PI * EPSILON_0); // Coulomb's constant (N⋅m²/C²)
 
     @Tool(name = "physics_constants", description = "Look up fundamental physical constants with their values, "
             + "units, and symbols. Covers mechanics, electromagnetism, thermodynamics, quantum, and relativity. "
@@ -46,9 +46,11 @@ public class PhysicsTool {
         sb.append("──────────────────\n\n");
 
         boolean all = "all".equals(q) || "constant".equals(q) || "constants".equals(q);
+        boolean matched = false;
 
         if (all || q.contains("mechanic") || q.contains("gravit") || q.contains("speed") || q.contains("light")
                 || q.equals("g") || q.equals("c") || q.contains("relativity")) {
+            matched = true;
             sb.append("MECHANICS & RELATIVITY\n");
             sb.append("  c   = ").append(sci(C)).append(" m/s          Speed of light in vacuum\n");
             sb.append("  G   = ").append(sci(G)).append(" N⋅m²/kg²    Gravitational constant\n");
@@ -56,14 +58,16 @@ public class PhysicsTool {
         }
         if (all || q.contains("electro") || q.contains("charge") || q.contains("permit") || q.contains("coulomb")
                 || q.equals("e") || q.contains("epsilon") || q.contains("permeab")) {
+            matched = true;
             sb.append("ELECTROMAGNETISM\n");
             sb.append("  e   = ").append(sci(E_CHARGE)).append(" C           Elementary charge\n");
             sb.append("  ε₀  = ").append(sci(EPSILON_0)).append(" F/m         Vacuum permittivity\n");
             sb.append("  μ₀  = ").append(sci(MU_0)).append(" H/m         Vacuum permeability\n");
-            sb.append("  k_e = ").append(sci(1 / (4 * Math.PI * EPSILON_0))).append(" N⋅m²/C²    Coulomb's constant\n\n");
+            sb.append("  k_e = ").append(sci(K_E)).append(" N⋅m²/C²    Coulomb's constant\n\n");
         }
         if (all || q.contains("quantum") || q.contains("planck") || q.contains("electron") || q.contains("proton")
                 || q.equals("h") || q.contains("avogadro") || q.contains("hbar") || q.contains("reduced")) {
+            matched = true;
             sb.append("QUANTUM & ATOMIC\n");
             sb.append("  h   = ").append(sci(H)).append(" J⋅s          Planck constant\n");
             sb.append("  ℏ   = ").append(sci(H_BAR)).append(" J⋅s          Reduced Planck (h/2π)\n");
@@ -73,13 +77,14 @@ public class PhysicsTool {
         }
         if (all || q.contains("thermo") || q.contains("boltzmann") || q.contains("stefan") || q.contains("gas")
                 || q.equals("k") || q.equals("r") || q.contains("ideal gas")) {
+            matched = true;
             sb.append("THERMODYNAMICS\n");
             sb.append("  k_B = ").append(sci(K_B)).append(" J/K          Boltzmann constant\n");
             sb.append("  R   = ").append(R_GAS).append(" J/(mol⋅K)       Ideal gas constant\n");
             sb.append("  σ   = ").append(sci(SIGMA)).append(" W/(m²⋅K⁴)   Stefan–Boltzmann constant\n\n");
         }
 
-        if (sb.toString().endsWith("──────────────────\n\n")) {
+        if (!matched) {
             sb.append("No constants matched '").append(query).append("'.\n");
             sb.append("Try: 'all', 'g', 'G', 'c', 'h', 'mechanics', 'electromagnetism', 'quantum', 'thermodynamics'");
         }
@@ -429,7 +434,6 @@ public class PhysicsTool {
 
         try {
             double[] v = parseValues(values);
-            double k_e = 1.0 / (4 * Math.PI * EPSILON_0);
 
             return switch (formula.strip().toLowerCase()) {
                 case "ohm" -> {
@@ -464,14 +468,14 @@ public class PhysicsTool {
                 }
                 case "coulomb" -> {
                     check(v, 3, "Q1(C), Q2(C), r(m)");
-                    double F = k_e * v[0] * v[1] / (v[2] * v[2]);
+                    double F = K_E * v[0] * v[1] / (v[2] * v[2]);
                     yield result("Coulomb's Law", "F = kQ₁Q₂/r²",
                             "F = " + sci(F) + " N (" + (F > 0 ? "repulsive" : "attractive") + ")",
                             "Q₁ = " + sci(v[0]) + " C, Q₂ = " + sci(v[1]) + " C, r = " + fmt(v[2]) + " m");
                 }
                 case "electric_field" -> {
                     check(v, 2, "charge(C), distance(m)");
-                    double E = k_e * v[0] / (v[1] * v[1]);
+                    double E = K_E * v[0] / (v[1] * v[1]);
                     yield result("Electric Field", "E = kQ/r²",
                             "E = " + sci(E) + " N/C", "Q = " + sci(v[0]) + " C, r = " + fmt(v[1]) + " m");
                 }

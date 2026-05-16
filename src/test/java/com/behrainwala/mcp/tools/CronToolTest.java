@@ -22,7 +22,6 @@ class CronToolTest {
     @Nested
     class ExplainCron {
 
-        // ── null / blank / invalid field count ──────────────────────────────
 
         @Test
         void null_returnsError() {
@@ -57,7 +56,6 @@ class CronToolTest {
                     .contains("8");
         }
 
-        // ── 5-field standard expressions ────────────────────────────────────
 
         @Test
         void everyMinute() {
@@ -156,7 +154,6 @@ class CronToolTest {
             assertThat(result).contains("nearest weekday to day 15");
         }
 
-        // ── month name normalization ────────────────────────────────────────
 
         @Test
         void monthNameNormalization() {
@@ -174,7 +171,6 @@ class CronToolTest {
             }
         }
 
-        // ── weekday name normalization ──────────────────────────────────────
 
         @Test
         void weekdayNameNormalization_MON() {
@@ -189,7 +185,6 @@ class CronToolTest {
             assertThat(result).containsIgnoringCase("weekday");
         }
 
-        // ── 6-field expressions (with seconds) ─────────────────────────────
 
         @Test
         void sixField_showsSecondsAndFormat() {
@@ -204,7 +199,6 @@ class CronToolTest {
             assertThat(result).contains("6-field (with seconds)");
         }
 
-        // ── 7-field expression (with year) ──────────────────────────────────
 
         @Test
         void sevenField_showsYear() {
@@ -212,7 +206,6 @@ class CronToolTest {
             assertThat(result).contains("Year:");
         }
 
-        // ── weekdayName switch cases ────────────────────────────────────────
 
         @Test
         void weekdayName_allCases() {
@@ -253,7 +246,6 @@ class CronToolTest {
             assertThat(result).contains("2:30 PM");
         }
 
-        // ── toPlainEnglish branches ─────────────────────────────────────────
 
         @Test
         void plainEnglish_everyNHours() {
@@ -296,7 +288,6 @@ class CronToolTest {
     @Nested
     class BuildCron {
 
-        // ── every N minutes ─────────────────────────────────────────────────
 
         @Test
         void everyNMinutes() {
@@ -317,7 +308,6 @@ class CronToolTest {
             assertThat(result).contains("*/15 * * * *");
         }
 
-        // ── every N hours ───────────────────────────────────────────────────
 
         @Test
         void everyNHours() {
@@ -332,7 +322,6 @@ class CronToolTest {
             assertThat(result).contains("0 */1 * * *");
         }
 
-        // ── every minute / every hour ───────────────────────────────────────
 
         @Test
         void everyMinute() {
@@ -348,7 +337,6 @@ class CronToolTest {
                     .contains("start of every hour");
         }
 
-        // ── daily at ────────────────────────────────────────────────────────
 
         @Test
         void dailyAt9am() {
@@ -384,7 +372,6 @@ class CronToolTest {
             assertThat(result).contains("0 12 * * *");
         }
 
-        // ── weekday at ──────────────────────────────────────────────────────
 
         @Test
         void weekdaysAt9am() {
@@ -398,7 +385,6 @@ class CronToolTest {
             assertThat(result).contains("30 8 * * 1-5");
         }
 
-        // ── weekend at ──────────────────────────────────────────────────────
 
         @Test
         void weekendsAt10am() {
@@ -406,7 +392,6 @@ class CronToolTest {
             assertThat(result).contains("0 10 * * 0,6");
         }
 
-        // ── midnight ────────────────────────────────────────────────────────
 
         @Test
         void midnight() {
@@ -415,7 +400,6 @@ class CronToolTest {
                     .contains("midnight");
         }
 
-        // ── noon ────────────────────────────────────────────────────────────
 
         @Test
         void noon() {
@@ -441,7 +425,6 @@ class CronToolTest {
                     .contains("Weekdays at noon");
         }
 
-        // ── first of month ──────────────────────────────────────────────────
 
         @Test
         void firstDayOfMonth() {
@@ -477,7 +460,6 @@ class CronToolTest {
             assertThat(result).contains("0 9 1 * *");
         }
 
-        // ── last of month ───────────────────────────────────────────────────
 
         @Test
         void lastDayOfMonth() {
@@ -497,7 +479,6 @@ class CronToolTest {
             assertThat(result).contains("0 0 28-31 * *");
         }
 
-        // ── weekly ──────────────────────────────────────────────────────────
 
         @Test
         void weekly_defaultMonday() {
@@ -590,7 +571,6 @@ class CronToolTest {
             assertThat(result).contains("0 10 * * 1");
         }
 
-        // ── every N seconds ─────────────────────────────────────────────────
 
         @Test
         void everyNSeconds() {
@@ -605,7 +585,6 @@ class CronToolTest {
             assertThat(result).contains("*/1 * * * * *");
         }
 
-        // ── unparseable ─────────────────────────────────────────────────────
 
         @Test
         void unparseable_returnsHelpText() {
@@ -615,7 +594,6 @@ class CronToolTest {
                     .contains("daily at 9am");
         }
 
-        // ── output format ───────────────────────────────────────────────────
 
         @Test
         void outputContainsDescriptionAndCron() {
@@ -626,7 +604,6 @@ class CronToolTest {
                     .contains("Means: Every 5 minutes");
         }
 
-        // ── parseTime with HH:MM format ─────────────────────────────────────
 
         @Test
         void dailyAtTimeWithMinutes_pm() {
@@ -647,7 +624,6 @@ class CronToolTest {
             assertThat(result).contains("30 14 * * *");
         }
 
-        // ── parseTime edge: 12:30am => 0:30, 12:30pm => 12:30 ──────────────
 
         @Test
         void dailyAt12_30am() {
@@ -661,7 +637,6 @@ class CronToolTest {
             assertThat(result).contains("30 12 * * *");
         }
 
-        // ── formatTime coverage ─────────────────────────────────────────────
 
         @Test
         void formatTime_midnight_shows12AM() {

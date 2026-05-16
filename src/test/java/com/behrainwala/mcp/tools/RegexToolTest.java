@@ -15,9 +15,7 @@ class RegexToolTest {
         tool = new RegexTool();
     }
 
-    // =========================================================================
     // testRegex
-    // =========================================================================
 
     @Nested
     class TestRegex {
@@ -82,7 +80,6 @@ class RegexToolTest {
                     .contains("Matches: YES");
         }
 
-        // ── Flags ───────────────────────────────────────────────────────────
 
         @Test
         void flag_caseInsensitive() {
@@ -153,7 +150,6 @@ class RegexToolTest {
             assertThat(result).contains("Matches: YES");
         }
 
-        // ── Invalid pattern ─────────────────────────────────────────────────
 
         @Test
         void invalidPattern_returnsInvalidRegex() {
@@ -166,7 +162,6 @@ class RegexToolTest {
                     .contains("Common fixes:");
         }
 
-        // ── Truncation ──────────────────────────────────────────────────────
 
         @Test
         void longInput_isTruncated() {
@@ -182,9 +177,7 @@ class RegexToolTest {
         }
     }
 
-    // =========================================================================
     // regexReplace
-    // =========================================================================
 
     @Nested
     class RegexReplace {
@@ -192,10 +185,7 @@ class RegexToolTest {
         @Test
         void replaceAll_default() {
             String result = tool.regexReplace("o", "0", "foo bar boo", null);
-            assertThat(result)
-                    
-                    
-                    .contains("f00 bar b00");
+            assertThat(result).contains("f00 bar b00");
         }
 
         @Test
@@ -270,9 +260,7 @@ class RegexToolTest {
         }
     }
 
-    // =========================================================================
     // explainRegex
-    // =========================================================================
 
     @Nested
     class ExplainRegex {
@@ -291,7 +279,6 @@ class RegexToolTest {
             assertThat(result).contains("Status: INVALID");
         }
 
-        // ── Anchors ─────────────────────────────────────────────────────────
 
         @Test
         void caret_explainedAsStartOfString() {
@@ -305,7 +292,6 @@ class RegexToolTest {
             assertThat(result).contains("End of string/line");
         }
 
-        // ── Dot and quantifiers ─────────────────────────────────────────────
 
         @Test
         void dot_explainedAsAnyChar() {
@@ -349,7 +335,6 @@ class RegexToolTest {
             assertThat(result).contains("Make preceding quantifier lazy (non-greedy)");
         }
 
-        // ── Alternation ─────────────────────────────────────────────────────
 
         @Test
         void pipe_explainedAsOr() {
@@ -357,7 +342,6 @@ class RegexToolTest {
             assertThat(result).contains("OR");
         }
 
-        // ── Groups ──────────────────────────────────────────────────────────
 
         @Test
         void capturingGroup() {
@@ -418,7 +402,6 @@ class RegexToolTest {
             assertThat(result).contains("Special group");
         }
 
-        // ── Character classes ───────────────────────────────────────────────
 
         @Test
         void characterClass_simple() {
@@ -452,7 +435,6 @@ class RegexToolTest {
             assertThat(result).contains("Breakdown:");
         }
 
-        // ── Quantifiers with braces ─────────────────────────────────────────
 
         @Test
         void exactQuantifier() {
@@ -479,7 +461,6 @@ class RegexToolTest {
             assertThat(result).contains("Breakdown:");
         }
 
-        // ── Escape sequences ────────────────────────────────────────────────
 
         @Test
         void escape_digit() {
@@ -638,7 +619,6 @@ class RegexToolTest {
             assertThat(result).contains("Escaped 'x'");
         }
 
-        // ── Literal characters ──────────────────────────────────────────────
 
         @Test
         void literal_characters() {
@@ -649,7 +629,6 @@ class RegexToolTest {
                     .contains("Literal 'c'");
         }
 
-        // ── Complex patterns ────────────────────────────────────────────────
 
         @Test
         void complexPattern_emailLike() {
@@ -672,7 +651,6 @@ class RegexToolTest {
                     .contains("Literal '-'");
         }
 
-        // ── padRight ────────────────────────────────────────────────────────
 
         @Test
         void padRight_longString_getsOneExtraSpace() {
@@ -682,9 +660,7 @@ class RegexToolTest {
         }
     }
 
-    // =========================================================================
     // Inner class tests: MatchInfo and GroupInfo
-    // =========================================================================
 
     @Nested
     class MatchInfoAndGroupInfo {

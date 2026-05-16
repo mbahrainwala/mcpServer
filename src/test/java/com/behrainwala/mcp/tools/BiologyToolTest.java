@@ -15,7 +15,6 @@ class BiologyToolTest {
         tool = new BiologyTool();
     }
 
-    // ── DNA Operations ──
 
     @Nested
     class DnaOperationsTests {
@@ -191,7 +190,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Hardy-Weinberg ──
 
     @Nested
     class HardyWeinbergTests {
@@ -293,7 +291,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Punnett Square ──
 
     @Nested
     class PunnettSquareTests {
@@ -376,7 +373,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Population Growth ──
 
     @Nested
     class PopulationGrowthTests {
@@ -446,7 +442,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Enzyme Kinetics ──
 
     @Nested
     class EnzymeKineticsTests {
@@ -542,7 +537,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Mathematical Correctness ──
 
     @Nested
     class MathematicalCorrectnessTests {
@@ -590,7 +584,6 @@ class BiologyToolTest {
         }
     }
 
-    // ── Fmt Helper Edge Cases ──
 
     @Nested
     class FmtHelperTests {

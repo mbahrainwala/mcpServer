@@ -569,7 +569,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("Dialect: standard");
         }
 
-        // ── Create table ────────────────────────────────────────────────────
 
         @Test
         void buildsCreateTable_standardDialect() {
@@ -616,7 +615,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("Dialect notes (sqlserver)");
         }
 
-        // ── Column type inference ───────────────────────────────────────────
 
         @Test
         void infersVarcharForStringColumns() {
@@ -679,7 +677,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("foo VARCHAR(255)");
         }
 
-        // ── Count by pattern ────────────────────────────────────────────────
 
         @Test
         void buildsCountByQuery() {
@@ -690,7 +687,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("ORDER BY count DESC");
         }
 
-        // ── Aggregate patterns ──────────────────────────────────────────────
 
         @Test
         void buildsSumQuery() {
@@ -737,7 +733,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("GROUP BY category");
         }
 
-        // ── Join pattern ────────────────────────────────────────────────────
 
         @Test
         void buildsJoinWithExplicitOnClause() {
@@ -755,7 +750,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("ON users.id = orders.users_id");
         }
 
-        // ── Select with where ───────────────────────────────────────────────
 
         @Test
         void buildsSelectColumnsFromWhereClause() {
@@ -778,7 +772,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("SELECT *");
         }
 
-        // ── Get/find/fetch all with where ───────────────────────────────────
 
         @Test
         void buildsFetchAllWhere() {
@@ -802,7 +795,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("WHERE role = admin");
         }
 
-        // ── Simple select all ───────────────────────────────────────────────
 
         @Test
         void buildsSimpleSelectAll() {
@@ -825,7 +817,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("FROM products");
         }
 
-        // ── Insert pattern ──────────────────────────────────────────────────
 
         @Test
         void buildsInsert() {
@@ -840,7 +831,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("INSERT INTO users");
         }
 
-        // ── Update pattern ──────────────────────────────────────────────────
 
         @Test
         void buildsUpdate() {
@@ -851,7 +841,6 @@ class SqlHelperToolTest {
             
         }
 
-        // ── Delete pattern ──────────────────────────────────────────────────
 
         @Test
         void buildsDelete() {
@@ -867,7 +856,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("WHERE active = 0");
         }
 
-        // ── Fallback ────────────────────────────────────────────────────────
 
         @Test
         void returnsFallback_whenDescriptionIsUnrecognized() {
@@ -876,7 +864,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("Tip:");
         }
 
-        // ── Dialect hints ───────────────────────────────────────────────────
 
         @Test
         void noDialectHints_forStandard() {
@@ -913,7 +900,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("TOP N");
         }
 
-        // ── buildLimit for sqlserver (returns empty) ────────────────────────
 
         @Test
         void countByWithSqlServer_noLimitAppended() {
@@ -922,7 +908,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("ORDER BY count DESC");
         }
 
-        // ── Create table with 'and' separator ──────────────────────────────
 
         @Test
         void buildsCreateTable_columnsWithAnd() {
@@ -950,7 +935,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("Available topics:");
         }
 
-        // ── Exact topic matches ─────────────────────────────────────────────
 
         @Test
         void returnsJoinsReference() {
@@ -1089,7 +1073,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("ISOLATION LEVEL");
         }
 
-        // ── Key normalization ───────────────────────────────────────────────
 
         @Test
         void normalizesSpacesToUnderscores() {
@@ -1118,7 +1101,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("SQL Reference: Window_Functions");
         }
 
-        // ── Partial match ───────────────────────────────────────────────────
 
         @Test
         void partialMatch_topicContainsKey() {
@@ -1167,7 +1149,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("SQL Reference: transaction");
         }
 
-        // ── Unknown topic ───────────────────────────────────────────────────
 
         @Test
         void returnsNotFound_forUnknownTopic() {
@@ -1188,7 +1169,6 @@ class SqlHelperToolTest {
             assertThat(result).contains("transactions");
         }
 
-        // ── Header formatting ───────────────────────────────────────────────
 
         @Test
         void headerLineIsAtLeast30Chars() {

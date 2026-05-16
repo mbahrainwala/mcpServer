@@ -14,7 +14,6 @@ class NumberBaseToolTest {
         tool = new NumberBaseTool();
     }
 
-    // ── numberBaseConvert ────────────────────────────────────────────────────
 
     @Test
     void convert_decimalToHex() {
@@ -127,7 +126,6 @@ class NumberBaseToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── numberIeee754 ────────────────────────────────────────────────────────
 
     @Test
     void ieee754_single_positive() {
@@ -237,7 +235,6 @@ class NumberBaseToolTest {
         assertThat(result).contains("Double (64-bit)");
     }
 
-    // ── numberTwosComplement ─────────────────────────────────────────────────
 
     @Test
     void twosComplement_positive8bit() {
@@ -305,7 +302,6 @@ class NumberBaseToolTest {
         assertThat(result).contains("Min: -128").contains("Max: 127");
     }
 
-    // ── numberBitwise ────────────────────────────────────────────────────────
 
     @Test
     void bitwise_and() {
@@ -381,7 +377,6 @@ class NumberBaseToolTest {
         assertThat(result).contains("Hex:     0x");
     }
 
-    // ── numberAsciiTable ─────────────────────────────────────────────────────
 
     @Test
     void ascii_charToCode_singleChar() {
@@ -515,7 +510,6 @@ class NumberBaseToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── displayChar edge cases ───────────────────────────────────────────────
 
     @Test
     void ascii_charToCode_controlChars() {

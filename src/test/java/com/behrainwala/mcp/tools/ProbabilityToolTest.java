@@ -15,7 +15,6 @@ class ProbabilityToolTest {
         tool = new ProbabilityTool();
     }
 
-    // ── probabilityCombinatorics ────────────────────────────────────────────
 
     @Nested
     class Combinatorics {
@@ -150,7 +149,6 @@ class ProbabilityToolTest {
         }
     }
 
-    // ── probabilityDistribution ─────────────────────────────────────────────
 
     @Nested
     class Distribution {
@@ -412,7 +410,6 @@ class ProbabilityToolTest {
         }
     }
 
-    // ── probabilityBayes ────────────────────────────────────────────────────
 
     @Nested
     class Bayes {
@@ -495,7 +492,6 @@ class ProbabilityToolTest {
         }
     }
 
-    // ── probabilityExpectedValue ────────────────────────────────────────────
 
     @Nested
     class ExpectedValue {
@@ -563,7 +559,6 @@ class ProbabilityToolTest {
         }
     }
 
-    // ── probabilityMarkovChain ──────────────────────────────────────────────
 
     @Nested
     class MarkovChain {

@@ -15,7 +15,6 @@ class HttpClientToolTest {
         tool = new HttpClientTool(new McpProperties());
     }
 
-    // ── Error handling: invalid URLs ─────────────────────────────────────────
 
     @Test
     void httpRequest_invalidUrl_returnsError() {
@@ -29,7 +28,6 @@ class HttpClientToolTest {
         assertThat(result).containsIgnoringCase("failed");
     }
 
-    // ── Default method ───────────────────────────────────────────────────────
 
     @Test
     void httpRequest_nullMethod_defaultsToGet() {
@@ -43,7 +41,6 @@ class HttpClientToolTest {
         assertThat(result).isNotNull();
     }
 
-    // ── Scheme prepending ────────────────────────────────────────────────────
 
     @Test
     void httpRequest_noScheme_prependsHttps() {
@@ -57,7 +54,6 @@ class HttpClientToolTest {
         assertThat(result).containsIgnoringCase("failed");
     }
 
-    // ── HTTP method branches ─────────────────────────────────────────────────
 
     @Test
     void httpRequest_postMethod_error() {
@@ -89,7 +85,6 @@ class HttpClientToolTest {
         assertThat(result).containsIgnoringCase("failed");
     }
 
-    // ── Body handling ────────────────────────────────────────────────────────
 
     @Test
     void httpRequest_postWithNullBody_noBodyPublisher() {
@@ -109,7 +104,6 @@ class HttpClientToolTest {
         assertThat(result).containsIgnoringCase("failed");
     }
 
-    // ── Header parsing ───────────────────────────────────────────────────────
 
     @Test
     void httpRequest_headersWithNewlines_parsed() {
@@ -144,7 +138,6 @@ class HttpClientToolTest {
         assertThat(result).doesNotContain("NullPointer");
     }
 
-    // ── statusText method coverage ───────────────────────────────────────────
     // Since statusText is private, we can't call it directly, but we verify
     // indirectly by checking the error output format
 
@@ -155,7 +148,6 @@ class HttpClientToolTest {
         assertThat(anotherTool).isNotNull();
     }
 
-    // ── URI parsing edge case ────────────────────────────────────────────────
 
     @Test
     void httpRequest_malformedUri_returnsError() {

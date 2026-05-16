@@ -64,9 +64,10 @@ public class WebSearchService {
                     String snippetText = snippet != null ? snippet.text() : "";
 
                     // DuckDuckGo wraps URLs in a redirect — extract the actual URL
-                    if (url.contains("uddg=")) {
+                    int uddgIdx = url.indexOf("uddg=");
+                    if (uddgIdx >= 0) {
                         try {
-                            String encoded = url.substring(url.indexOf("uddg=") + 5);
+                            String encoded = url.substring(uddgIdx + 5);
                             if (encoded.contains("&")) {
                                 encoded = encoded.substring(0, encoded.indexOf("&"));
                             }

@@ -39,7 +39,14 @@
       "mcp__behrainwala-mcp__doc_create",
       "Bash(Get-ChildItem *)",
       "PowerShell(Get-ChildItem -Path \"D:\\\\Development\\\\java\\\\llmStudioMcp\\\\src\\\\main\\\\java\\\\com\\\\behrainwala\\\\mcp\\\\tools\" | Where-Object {$_.Extension -eq \".java\"} | Select-Object FullName)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ [a-zA-Z_]* = [a-zA-Z_]* [+\\\\-\\\\*\\\\/^].*=[[:space:]]*[0-9]/d' src/test/java/com/behrainwala/mcp/tools/PhysicsToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ [A-Za-z_]* = /d' src/test/java/com/behrainwala/mcp/tools/PhysicsToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ IEEE 754.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ sin\\(PI.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ Characters that fail.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ which will also fail.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ --5 =>.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)"
     ]
   }
 }

@@ -15,7 +15,6 @@ class ChemistryToolTest {
         tool = new ChemistryTool();
     }
 
-    // ── Element Lookup ──
 
     @Nested
     class ElementLookupTests {
@@ -104,7 +103,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Molar Mass ──
 
     @Nested
     class MolarMassTests {
@@ -191,7 +189,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Solutions ──
 
     @Nested
     class SolutionsTests {
@@ -321,7 +318,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Gas Laws ──
 
     @Nested
     class GasLawsTests {
@@ -423,7 +419,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Equilibrium ──
 
     @Nested
     class EquilibriumTests {
@@ -523,7 +518,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Mathematical Correctness ──
 
     @Nested
     class MathematicalCorrectnessTests {
@@ -563,7 +557,6 @@ class ChemistryToolTest {
         }
     }
 
-    // ── Fmt Helper ──
 
     @Nested
     class FmtHelperTests {

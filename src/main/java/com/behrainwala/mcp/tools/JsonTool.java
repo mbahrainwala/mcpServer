@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
 
@@ -175,6 +177,39 @@ public class JsonTool {
 
         } catch (JsonProcessingException e) {
             return "Invalid JSON: " + e.getOriginalMessage();
+        }
+    }
+
+    @Tool(name = "yaml_to_json", description = "Convert YAML to JSON. "
+            + "Useful for config files, API responses, and Kubernetes/Docker Compose manifests. "
+            + "Returns a pretty-printed JSON string.")
+    public String yamlToJson(
+            @ToolParam(description = "The YAML string to convert") String yaml) {
+
+        try {
+            Object parsed = new Yaml().load(yaml);
+            if (parsed == null) return "{}";
+            return mapper.writeValueAsString(parsed);
+        } catch (Exception e) {
+            return "Error converting YAML to JSON: " + e.getMessage();
+        }
+    }
+
+    @Tool(name = "json_to_yaml", description = "Convert JSON to YAML. "
+            + "Produces readable block-style YAML suitable for config files. "
+            + "Useful when you need to create Kubernetes manifests, Docker Compose files, etc.")
+    public String jsonToYaml(
+            @ToolParam(description = "The JSON string to convert") String json) {
+
+        try {
+            Object parsed = compactMapper.readValue(json, Object.class);
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            options.setIndent(2);
+            options.setPrettyFlow(true);
+            return new Yaml(options).dump(parsed);
+        } catch (Exception e) {
+            return "Error converting JSON to YAML: " + e.getMessage();
         }
     }
 

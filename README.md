@@ -84,10 +84,45 @@ date/time, Wikipedia, unit conversion, Excel assistance, and more — all with *
 | `pdf_to_text` | Extract text from a PDF — local file path, URL, or base64-encoded content.             |
 | `pdf_metadata` | Extract PDF metadata: title, author, pages, size, encryption status, etc.              |
 | `pdf_to_images` | Extract PDF pages to individual images in a subfolder for each file.                   |
+| **Data Format Tools** |                                                                              |
+| `yaml_to_json` | Convert YAML to JSON — useful for Kubernetes manifests, Docker Compose, config files.  |
+| `json_to_yaml` | Convert JSON to block-style YAML.                                                      |
+| `csv_to_json` | Parse CSV text into a JSON array of objects (with header) or arrays (without).         |
+| `json_to_csv` | Convert a JSON array of objects or arrays to well-formed CSV.                          |
+| `csv_stats` | Analyze CSV data: column names, row count, type detection, sample values, min/max/avg. |
+
+## Token-Saving Features
+
+The server is designed to reduce LLM token consumption through three mechanisms:
+
+### 1. Batch operations — fewer round trips
+
+| Instead of… | Use… | Savings |
+|---|---|---|
+| `calculate` × N calls | `batch_calculate("expr1; expr2; expr3")` | N−1 round trips |
+| `web_search` + `fetch_webpage` × N | `web_research(query, maxSources=2)` | 3–6 round trips → 1 |
+
+### 2. Output size control — smaller context windows
+
+| Tool | How to limit output |
+|---|---|
+| `fetch_webpage` | `maxChars=1000` (default 5000, was previously 50000) |
+| `web_search` | `maxResults=3` (default 5, max 10) |
+| `web_research` | `maxSources=1`, `maxCharsPerSource=500` |
+
+### 3. Direct computation — skip LLM reasoning
+
+Rather than asking the LLM to reason through calculations, delegate to specialist tools:
+- `physics_projectile` for ballistics instead of showing math steps
+- `batch_calculate` for multiple arithmetic expressions
+- `csv_stats` for dataset analysis instead of having the LLM parse CSV
+- `yaml_to_json` / `json_to_yaml` for format conversions
 
 ### Example Workflows
 
-- **Research:** `web_search` → `fetch_webpage` → answer with current info
+- **Research (efficient):** `web_research("query", maxSources=2)` → gets search + page content in one call
+- **Research (manual):** `web_search` → `fetch_webpage(url, maxChars=3000)` → answer with current info
+- **Batch math:** `batch_calculate("2^10; sqrt(144); sin(PI/2)")` → all three results in one call
 - **Math:** *"What's 15% compound interest on $10,000 over 5 years?"* → `calculate`
 - **Equations:** *"Solve x² - 5x + 6 = 0"* → `solve_quadratic` → roots: x=2, x=3
 - **Geometry:** *"Area of a triangle with sides 3, 4, 5"* → `triangle_properties` → area, angles, radii
@@ -96,6 +131,8 @@ date/time, Wikipedia, unit conversion, Excel assistance, and more — all with *
 - **Regex:** *"Does this regex match emails?"* → `regex_test` validates against real input
 - **API testing:** *"Test my endpoint"* → `http_request` with custom headers/body
 - **JSON:** *"Is this JSON valid?"* → `json_validate` → pretty-print + structure analysis
+- **YAML:** *"Convert this k8s manifest to JSON"* → `yaml_to_json`
+- **CSV:** *"Parse this CSV"* → `csv_to_json` → JSON array; or `csv_stats` for column analysis
 - **Cron:** *"What does `0 */6 * * MON-FRI` mean?"* → `cron_explain`
 - **Naming:** *"Convert getUserName to snake_case"* → `text_transform`
 - **Physics:** *"A ball is thrown up at 20m/s, how high does it go?"* → `physics_kinematics`

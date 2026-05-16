@@ -16,7 +16,6 @@ class DateTimeToolTest {
         tool = new DateTimeTool();
     }
 
-    // ── getCurrentDateTime ───────────────────────────────────────────────────
 
     @Test
     void getCurrentDateTime_returnsAllFields() {
@@ -63,7 +62,6 @@ class DateTimeToolTest {
         assertThat(result).contains("Error: Invalid timezone");
     }
 
-    // ── convertTimezone ──────────────────────────────────────────────────────
 
     @Test
     void convertTimezone_nycToTokyo() {
@@ -98,7 +96,6 @@ class DateTimeToolTest {
         assertThat(result).contains("Error:");
     }
 
-    // ── dateDifference ───────────────────────────────────────────────────────
 
     @Test
     void dateDifference_exactDays() {
