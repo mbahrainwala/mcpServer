@@ -39,32 +39,32 @@ class PdfToolTest {
 
     @Test
     void pdfToText_invalidPath_returnsError() {
-        String result = tool.pdfToText("/does/not/exist/file.pdf", null, null);
+        String result = tool.pdfToText("/does/not/exist/file.pdf", null, null, null);
         assertThat(result).startsWith("Error extracting PDF text:");
     }
 
     @Test
     void pdfToText_blankSource_returnsError() {
-        String result = tool.pdfToText("", null, null);
+        String result = tool.pdfToText("", null, null, null);
         assertThat(result).contains("Error");
     }
 
     @Test
     void pdfToText_nullSource_returnsError() {
-        String result = tool.pdfToText(null, null, null);
+        String result = tool.pdfToText(null, null, null, null);
         assertThat(result).contains("Error");
     }
 
     @Test
     void pdfToText_whitespaceSource_returnsError() {
-        String result = tool.pdfToText("   ", null, null);
+        String result = tool.pdfToText("   ", null, null, null);
         assertThat(result).contains("Error");
     }
 
     @Test
     void pdfToText_validPdf_extractsText() throws Exception {
         File pdfFile = createTestPdf("Hello PDF World");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
         assertThat(result)
                 .contains("Hello PDF World")
                 .contains("PDF Text Extraction")
@@ -75,56 +75,56 @@ class PdfToolTest {
     @Test
     void pdfToText_withPageRange_startsAt1() throws Exception {
         File pdfFile = createMultiPagePdf("Page1", "Page2", "Page3");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 1, 1);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 1, 1, null);
         assertThat(result).contains("Page1").doesNotContain("Page2");
     }
 
     @Test
     void pdfToText_withPageRange_endPage() throws Exception {
         File pdfFile = createMultiPagePdf("Page1", "Page2", "Page3");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 2, 3);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 2, 3, null);
         assertThat(result).contains("Page2").contains("Page3");
     }
 
     @Test
     void pdfToText_startPage0_treatedAs1() throws Exception {
         File pdfFile = createTestPdf("Content");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 0, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 0, null, null);
         assertThat(result).contains("Content");
     }
 
     @Test
     void pdfToText_endPage0_treatedAsLast() throws Exception {
         File pdfFile = createTestPdf("Content");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, 0);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, 0, null);
         assertThat(result).contains("Content");
     }
 
     @Test
     void pdfToText_endPageExceedsTotalPages_capped() throws Exception {
         File pdfFile = createTestPdf("Content");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 1, 100);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 1, 100, null);
         assertThat(result).contains("Content");
     }
 
     @Test
     void pdfToText_startPageExceedsTotalPages_returnsError() throws Exception {
         File pdfFile = createTestPdf("Content");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 99, 100);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 99, 100, null);
         assertThat(result).contains("Error: startPage (99) exceeds total pages");
     }
 
     @Test
     void pdfToText_startGreaterThanEnd_returnsError() throws Exception {
         File pdfFile = createMultiPagePdf("Page1", "Page2", "Page3");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 3, 1);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), 3, 1, null);
         assertThat(result).contains("Error: startPage (3) is greater than endPage (1)");
     }
 
     @Test
     void pdfToText_blankPdf_showsNoExtractableText() throws Exception {
         File pdfFile = createBlankPdf();
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
         assertThat(result).contains("No extractable text found")
                 .contains("pdf_to_images");
     }
@@ -132,7 +132,7 @@ class PdfToolTest {
     @Test
     void pdfToText_headerIncludesSourcePath() throws Exception {
         File pdfFile = createTestPdf("Some text");
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
         assertThat(result).contains(pdfFile.getAbsolutePath());
     }
 
@@ -386,7 +386,7 @@ class PdfToolTest {
         tool.setOcrService(mockOcr);
 
         File pdfFile = createBlankPdf();
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
 
         assertThat(result).contains("Scanned text from OCR");
         assertThat(result).contains("[OCR via Tesseract");
@@ -401,7 +401,7 @@ class PdfToolTest {
         tool.setOcrService(mockOcr);
 
         File pdfFile = createBlankPdf();
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
 
         assertThat(result).contains("No extractable text found");
         assertThat(result).contains("OCR was attempted");
@@ -414,7 +414,7 @@ class PdfToolTest {
         tool.setOcrService(mockOcr);
 
         File pdfFile = createBlankPdf();
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
 
         assertThat(result).contains("No extractable text found");
         assertThat(result).contains("pdf_to_images");
@@ -428,7 +428,7 @@ class PdfToolTest {
         tool.setOcrService(mockOcr);
 
         File pdfFile = createTestPdf("Already has text");
-        tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
 
         verify(mockOcr, never()).ocr(any());
     }
@@ -437,10 +437,38 @@ class PdfToolTest {
     void pdfToText_ocrServiceNull_showsFallbackMessage() throws Exception {
         // default: ocrService is null (no Spring context in unit tests)
         File pdfFile = createBlankPdf();
-        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null);
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, null);
 
         assertThat(result).contains("No extractable text found");
         assertThat(result).contains("pdf_to_images");
+    }
+
+    @Test
+    void pdfToText_forceOcr_callsOcrEvenWhenTextExists() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(true);
+        when(mockOcr.ocr(any(BufferedImage.class))).thenReturn("OCR override text");
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createTestPdf("Garbled embedded text");
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, true);
+
+        assertThat(result).contains("OCR override text");
+        assertThat(result).contains("forced");
+        verify(mockOcr, atLeastOnce()).ocr(any(BufferedImage.class));
+    }
+
+    @Test
+    void pdfToText_forceOcrFalse_usesEmbeddedText() throws Exception {
+        OcrService mockOcr = mock(OcrService.class);
+        when(mockOcr.isAvailable()).thenReturn(true);
+        tool.setOcrService(mockOcr);
+
+        File pdfFile = createTestPdf("Normal embedded text");
+        String result = tool.pdfToText(pdfFile.getAbsolutePath(), null, null, false);
+
+        assertThat(result).contains("Normal embedded text");
+        verify(mockOcr, never()).ocr(any());
     }
 
 

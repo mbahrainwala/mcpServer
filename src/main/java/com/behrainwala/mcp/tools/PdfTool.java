@@ -43,6 +43,7 @@ public class PdfTool {
     private static final Logger log = LoggerFactory.getLogger(PdfTool.class);
     private static final int MAX_TEXT_LENGTH = 50_000;
     private static final int DEFAULT_DPI = 150;
+    private static final int OCR_DPI = 300;  // higher resolution significantly improves Tesseract accuracy
     private static final int MAX_DPI = 300;
     private static final int MAX_IMAGE_PAGES = 5;
     private static final int MAX_OCR_PAGES = 10;
@@ -60,12 +61,15 @@ public class PdfTool {
                   + "For text-based PDFs, uses fast embedded-text extraction. "
                   + "For image-based or scanned PDFs (where no embedded text exists), automatically falls back to "
                   + "Tesseract OCR so that LLMs do not need to spend vision tokens. "
+                  + "Set forceOcr=true when a PDF has embedded but garbled or unreadable text (encoding issues). "
                   + "Optionally restrict extraction to a specific page range.")
     public String pdfToText(
             @ToolParam(description = "Absolute local file path (e.g. 'C:/docs/report.pdf'), a URL pointing to a PDF, "
                     + "or base64-encoded PDF content (prefixed with 'base64:').") String source,
             @ToolParam(description = "First page to extract (1-based, inclusive). Omit or set 0 for the beginning.", required = false) Integer startPage,
-            @ToolParam(description = "Last page to extract (1-based, inclusive). Omit or set 0 for the last page.", required = false) Integer endPage) {
+            @ToolParam(description = "Last page to extract (1-based, inclusive). Omit or set 0 for the last page.", required = false) Integer endPage,
+            @ToolParam(description = "Optional. Set true to force Tesseract OCR even when embedded text exists. "
+                    + "Use when the PDF contains garbled or incorrectly-encoded embedded text.", required = false) Boolean forceOcr) {
 
         try (PDDocument doc = loadDocument(source)) {
             int totalPages = doc.getNumberOfPages();
@@ -86,6 +90,7 @@ public class PdfTool {
             stripper.setSortByPosition(true);
 
             String text = stripper.getText(doc);
+            boolean shouldOcr = text.isBlank() || Boolean.TRUE.equals(forceOcr);
 
             StringBuilder sb = new StringBuilder();
             sb.append("PDF Text Extraction\n");
@@ -94,11 +99,21 @@ public class PdfTool {
             sb.append("Pages  : ").append(start).append("–").append(end)
               .append(" of ").append(totalPages).append("\n\n");
 
-            if (text.isBlank()) {
+            if (!shouldOcr) {
+                if (text.length() > MAX_TEXT_LENGTH) {
+                    sb.append(text, 0, MAX_TEXT_LENGTH);
+                    sb.append("\n\n... [truncated at ").append(MAX_TEXT_LENGTH).append(" chars — use startPage/endPage to extract specific sections]");
+                } else {
+                    sb.append(text);
+                }
+            } else {
                 if (ocrService != null && ocrService.isAvailable()) {
                     String ocrText = ocrPages(doc, start, end);
                     if (!ocrText.isBlank()) {
-                        sb.append("[OCR via Tesseract — pages ").append(start).append("–").append(end).append("]\n\n");
+                        String label = Boolean.TRUE.equals(forceOcr)
+                                ? "[OCR via Tesseract (forced) — pages "
+                                : "[OCR via Tesseract — pages ";
+                        sb.append(label).append(start).append("–").append(end).append("]\n\n");
                         if (ocrText.length() > MAX_TEXT_LENGTH) {
                             sb.append(ocrText, 0, MAX_TEXT_LENGTH);
                             sb.append("\n\n... [truncated at ").append(MAX_TEXT_LENGTH)
@@ -115,11 +130,6 @@ public class PdfTool {
                     sb.append("[No extractable text found — this PDF is image-only (scanned or graphical content) or encrypted. ")
                       .append("Use the pdf_to_images tool to render pages as images for vision-based reading.]");
                 }
-            } else if (text.length() > MAX_TEXT_LENGTH) {
-                sb.append(text, 0, MAX_TEXT_LENGTH);
-                sb.append("\n\n... [truncated at ").append(MAX_TEXT_LENGTH).append(" chars — use startPage/endPage to extract specific sections]");
-            } else {
-                sb.append(text);
             }
 
             return sb.toString();
@@ -275,7 +285,7 @@ public class PdfTool {
         StringBuilder sb = new StringBuilder();
         for (int pageIdx = start - 1; pageIdx < ocrEnd; pageIdx++) {
             try {
-                BufferedImage img = renderer.renderImageWithDPI(pageIdx, DEFAULT_DPI);
+                BufferedImage img = renderer.renderImageWithDPI(pageIdx, OCR_DPI);
                 String pageText = ocrService.ocr(img);
                 if (!pageText.isBlank()) {
                     sb.append(pageText).append("\n");

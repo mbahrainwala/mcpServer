@@ -16,6 +16,8 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.bytedeco.leptonica.global.leptonica.*;
 import static org.bytedeco.tesseract.global.tesseract.OEM_LSTM_ONLY;
@@ -87,10 +89,11 @@ public class OcrService {
     /**
      * Runs Tesseract OCR on a single page image and returns the extracted text.
      * <p>
-     * Pre-processing pipeline applied before OCR:
-     *   1. Convert RGB → grayscale (removes color noise, reduces image size)
-     *   2. S-curve contrast enhancement (pixContrastTRC) — pulls faint/light-gray text
-     *      away from the white background so Tesseract's LSTM can detect it reliably.
+     * Pre-processing pipeline (each step is skipped if it returns null):
+     *   1. RGB → grayscale — removes color noise; LSTM works well with grayscale
+     *   2. Deskew — corrects pages scanned at an angle
+     *   3. Unsharp masking — recovers sharpness lost in low-DPI or blurry scans
+     *   4. S-curve contrast boost — pulls faint text away from the paper background
      * <p>
      * Each call creates its own TessBaseAPI instance, making this method thread-safe.
      */
@@ -102,7 +105,6 @@ public class OcrService {
                 throw new IOException("Tesseract Init failed");
             }
             api.SetPageSegMode(PSM_AUTO);
-            // Maintain word spacing so columns and tables stay readable
             api.SetVariable("preserve_interword_spaces", "1");
 
             byte[] pngBytes;
@@ -111,22 +113,42 @@ public class OcrService {
                 pngBytes = baos.toByteArray();
             }
 
-            // Load image into Leptonica — deallocate the BytePointer AFTER pixReadMem copies
-            // the data, not before (the linter previously inverted this order, causing a UAF).
+            // Deallocate BytePointer AFTER pixReadMem copies the data (prevents UAF)
             BytePointer bp = new BytePointer(pngBytes);
             PIX rawPix = pixReadMem(bp, pngBytes.length);
             bp.deallocate();
 
-            // Grayscale conversion — LSTM works well with grayscale; equal channel weights
-            PIX pixGray = pixConvertRGBToGray(rawPix, 0.0f, 0.0f, 0.0f);
+            List<PIX> toClose = new ArrayList<>();
+            try {
+                toClose.add(rawPix);
 
-            // S-curve contrast boost — darkens mid-gray regions (faint text) and brightens
-            // near-white regions (paper background), sharpening the separation between them
-            PIX pixEnhanced = pixContrastTRC(null, pixGray, CONTRAST_FACTOR);
+                // 1. Grayscale
+                PIX pixGray = pixConvertRGBToGray(rawPix, 0.0f, 0.0f, 0.0f);
+                toClose.add(pixGray);
+                PIX current = pixGray;
 
+                // 2. Deskew — corrects tilted scans before sharpening/contrast work
+                PIX pixDeskewed = pixDeskew(current, 1);
+                if (pixDeskewed != null && !pixDeskewed.isNull()) {
+                    toClose.add(pixDeskewed);
+                    current = pixDeskewed;
+                }
 
-            try{
-                api.SetImage(pixEnhanced);
+                // 3. Unsharp masking — sharpens text edges blurred by scanning or low DPI
+                PIX pixSharpened = pixUnsharpMaskingGray(current, 5, 0.5f);
+                if (pixSharpened != null && !pixSharpened.isNull()) {
+                    toClose.add(pixSharpened);
+                    current = pixSharpened;
+                }
+
+                // 4. S-curve contrast boost — darkens faint text, brightens paper background
+                PIX pixEnhanced = pixContrastTRC(null, current, CONTRAST_FACTOR);
+                if (pixEnhanced != null && !pixEnhanced.isNull()) {
+                    toClose.add(pixEnhanced);
+                    current = pixEnhanced;
+                }
+
+                api.SetImage(current);
                 BytePointer textPtr = api.GetUTF8Text();
                 try {
                     return textPtr != null ? textPtr.getString().strip() : "";
@@ -134,12 +156,9 @@ public class OcrService {
                     if (textPtr != null) textPtr.deallocate();
                 }
             } finally {
-                if(pixEnhanced!=null)
-                    pixEnhanced.close();
-                if(pixGray!=null)
-                    pixGray.close();
-                if(rawPix!=null)
-                    rawPix.close();
+                for (PIX pix : toClose) {
+                    if (pix != null) pix.close();
+                }
             }
         } finally {
             api.End();
