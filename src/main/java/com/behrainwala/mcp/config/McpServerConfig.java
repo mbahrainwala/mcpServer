@@ -50,6 +50,7 @@ public class McpServerConfig {
             PhysicsTool physicsTool,
             ChemistryTool chemistryTool,
             BiologyTool biologyTool,
+            FluidDynamicsTool fluidDynamicsTool,
             // Excel tools
             ExcelFormulaTool excelFormulaTool,
             ExcelDataTool excelDataTool,
@@ -82,6 +83,7 @@ public class McpServerConfig {
                         physicsTool,
                         chemistryTool,
                         biologyTool,
+                        fluidDynamicsTool,
                         excelFormulaTool,
                         excelDataTool,
                         pdfTool,
