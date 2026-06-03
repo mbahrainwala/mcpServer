@@ -79,7 +79,7 @@ class ExcelFormulaToolTest {
         @Test
         void directLookup_formatsEqualsRepeatingLine() {
             String result = tool.functionLookup("IF");
-            assertThat(result).contains("\u2550");
+            assertThat(result).contains("═");
         }
 
         // Category search -- use categories that are NOT also function names

@@ -102,36 +102,39 @@ public class DocumentTool {
     // ── Tool: doc_create ─────────────────────────────────────────────────────
 
     @Tool(name = "doc_create",
-          description = "Create a professional .docx Word document from enhanced markdown content. "
-                  + "Optionally starts with a YAML frontmatter block (between --- lines) to configure the document.\n\n"
-                  + "FRONTMATTER (all optional, between --- lines at the top):\n"
-                  + "  font: Calibri              # font family\n"
-                  + "  fontSize: 11               # body font size in points\n"
-                  + "  pageSize: Letter           # Letter or A4\n"
-                  + "  margins: 1in               # all margins (or: top:0.75in bottom:1in left:1in right:1in)\n"
-                  + "  accentColor: \"#2E74B5\"    # heading color (hex or name)\n"
-                  + "  lineSpacing: 1.15          # line spacing multiplier\n"
-                  + "  pageNumbers: bottom-center # false/none, or bottom/top + -center/-right/-left\n"
-                  + "  header: Company Confidential\n"
-                  + "  footer: Draft v1.0\n"
-                  + "  title: Document Title\n"
-                  + "  author: Jane Smith\n\n"
-                  + "CONTENT SYNTAX:\n"
-                  + "  # H1  ## H2  ### H3  #### H4       — headings with accent color\n"
-                  + "  **bold**  *italic*  ***bold-italic***\n"
-                  + "  __underline__   ~~strikethrough~~\n"
-                  + "  [text]{color:red}  [text]{size:14}  [text]{color:#FF6600 size:12}\n"
-                  + "  - bullet  or  1. numbered           — lists\n"
-                  + "  | Col1 | Col2 |  and  |---|---|     — table (first row = accented header)\n"
-                  + "    Cell prefix {bg:#E7F3FF} sets cell background\n"
-                  + "    Cell suffix ^^N spans N columns (e.g. Title^^3 spans 3)\n"
-                  + "  <<<                                 — page break\n"
-                  + "  [TOC]                               — table of contents field\n"
-                  + "  ::: center  (or right/left/justify) — start alignment block\n"
-                  + "  :::                                 — end alignment block\n"
-                  + "  > blockquote text                   — indented italic quote\n"
-                  + "  ![alt](path/url/base64:){width:3in align:center}  — image\n"
-                  + "  ---                                 — horizontal rule")
+          description = """
+                  Create a professional .docx Word document from enhanced markdown content. \
+                  Optionally starts with a YAML frontmatter block (between --- lines) to configure the document.
+                  
+                  FRONTMATTER (all optional, between --- lines at the top):
+                    font: Calibri              # font family
+                    fontSize: 11               # body font size in points
+                    pageSize: Letter           # Letter or A4
+                    margins: 1in               # all margins (or: top:0.75in bottom:1in left:1in right:1in)
+                    accentColor: "#2E74B5"    # heading color (hex or name)
+                    lineSpacing: 1.15          # line spacing multiplier
+                    pageNumbers: bottom-center # false/none, or bottom/top + -center/-right/-left
+                    header: Company Confidential
+                    footer: Draft v1.0
+                    title: Document Title
+                    author: Jane Smith
+                  
+                  CONTENT SYNTAX:
+                    # H1  ## H2  ### H3  #### H4       — headings with accent color
+                    **bold**  *italic*  ***bold-italic***
+                    __underline__   ~~strikethrough~~
+                    [text]{color:red}  [text]{size:14}  [text]{color:#FF6600 size:12}
+                    - bullet  or  1. numbered           — lists
+                    | Col1 | Col2 |  and  |---|---|     — table (first row = accented header)
+                      Cell prefix {bg:#E7F3FF} sets cell background
+                      Cell suffix ^^N spans N columns (e.g. Title^^3 spans 3)
+                    <<<                                 — page break
+                    [TOC]                               — table of contents field
+                    ::: center  (or right/left/justify) — start alignment block
+                    :::                                 — end alignment block
+                    > blockquote text                   — indented italic quote
+                    ![alt](path/url/base64:){width:3in align:center}  — image
+                    ---                                 — horizontal rule""")
     public String docCreate(
             @ToolParam(description = "Absolute path where the .docx file should be saved, "
                     + "e.g. 'C:/docs/resume.docx'. The parent directory must already exist.") String outputPath,
@@ -159,12 +162,13 @@ public class DocumentTool {
     // ── Tool: doc_edit ────────────────────────────────────────────────────────
 
     @Tool(name = "doc_edit",
-          description = "Edit an existing .docx Word document using a JSON array of operations.\n"
-                  + "Operations:\n"
-                  + "  {\"type\":\"replace_text\",\"find\":\"old\",\"replace\":\"new\"}\n"
-                  + "  {\"type\":\"append_markdown\",\"content\":\"# Section\\n\\nText.\"}\n"
-                  + "  {\"type\":\"set_property\",\"property\":\"title|subject|author|description\",\"value\":\"...\"}\n"
-                  + "Only .docx files are supported.")
+          description = """
+                  Edit an existing .docx Word document using a JSON array of operations.
+                  Operations:
+                    {"type":"replace_text","find":"old","replace":"new"}
+                    {"type":"append_markdown","content":"# Section\\n\\nText."}
+                    {"type":"set_property","property":"title|subject|author|description","value":"..."}
+                  Only .docx files are supported.""")
     public String docEdit(
             @ToolParam(description = "Absolute local file path to the .docx file to edit.") String source,
             @ToolParam(description = "JSON array of edit operations.") String operations,
@@ -340,8 +344,8 @@ public class DocumentTool {
             s.addNewName().setVal("Normal");
             CTRPr rpr = s.addNewRPr();
             CTFonts f = rpr.addNewRFonts(); f.setAscii(cfg.font()); f.setHAnsi(cfg.font());
-            CTHpsMeasure sz = rpr.addNewSz(); sz.setVal(BigInteger.valueOf(cfg.fontSize() * 2));
-            rpr.addNewSzCs().setVal(BigInteger.valueOf(cfg.fontSize() * 2));
+            CTHpsMeasure sz = rpr.addNewSz(); sz.setVal(BigInteger.valueOf(cfg.fontSize() * 2L));
+            rpr.addNewSzCs().setVal(BigInteger.valueOf(cfg.fontSize() * 2L));
             styles.addStyle(new XWPFStyle(s, styles));
         }
 
@@ -385,8 +389,8 @@ public class DocumentTool {
 
             CTRPr rpr = s.addNewRPr();
             CTFonts f = rpr.addNewRFonts(); f.setAscii(cfg.font()); f.setHAnsi(cfg.font());
-            CTHpsMeasure sz = rpr.addNewSz(); sz.setVal(BigInteger.valueOf(hCfg[i][0] * 2));
-            rpr.addNewSzCs().setVal(BigInteger.valueOf(hCfg[i][0] * 2));
+            CTHpsMeasure sz = rpr.addNewSz(); sz.setVal(BigInteger.valueOf(hCfg[i][0] * 2L));
+            rpr.addNewSzCs().setVal(BigInteger.valueOf(hCfg[i][0] * 2L));
             rpr.addNewColor().setVal(cfg.accentColor());
             if (hCfg[i][1] == 1) { rpr.addNewB(); rpr.addNewBCs(); }
             if (hCfg[i][2] == 1) rpr.addNewI();
@@ -422,7 +426,7 @@ public class DocumentTool {
 
     private XWPFParagraph firstParagraph(XWPFHeaderFooter hf) {
         List<XWPFParagraph> list = hf.getParagraphs();
-        return list.isEmpty() ? hf.createParagraph() : list.get(0);
+        return list.isEmpty() ? hf.createParagraph() : list.getFirst();
     }
 
     private void addPageNumField(XWPFParagraph para, DocumentConfig cfg) {
@@ -518,7 +522,7 @@ public class DocumentTool {
             }
 
             // ─── image: ![alt](src) or ![alt](src){attrs}
-            Matcher imgM = Pattern.compile("!\\[([^]]*)]\\(([^)]+)\\)(?:\\{([^}]*)\\})?").matcher(line.strip());
+            Matcher imgM = Pattern.compile("!\\[([^]]*)]\\(([^)]+)\\)(?:\\{([^}]*)})?").matcher(line.strip());
             if (imgM.matches()) {
                 if (lastWasList) { numberedNumId = null; lastWasList = false; }
                 insertImage(doc, imgM.group(2).strip(), imgM.group(1), imgM.group(3), cfg, currentAlign);
@@ -732,7 +736,7 @@ public class DocumentTool {
                 setTcW(mar.isSetRight() ? mar.getRight() : mar.addNewRight(), 120);
 
                 // Cell paragraph + content
-                XWPFParagraph cp = cell.getParagraphs().isEmpty() ? cell.addParagraph() : cell.getParagraphs().get(0);
+                XWPFParagraph cp = cell.getParagraphs().isEmpty() ? cell.addParagraph() : cell.getParagraphs().getFirst();
                 while (!cp.getRuns().isEmpty()) cp.removeRun(0);
                 if (align != null) cp.setAlignment(align);
 
@@ -902,7 +906,7 @@ public class DocumentTool {
         if (!full.contains(find)) return 0;
         List<XWPFRun> runs = para.getRuns();
         if (runs.isEmpty()) return 0;
-        runs.get(0).setText(full.replace(find, replace), 0);
+        runs.getFirst().setText(full.replace(find, replace), 0);
         for (int i = runs.size() - 1; i > 0; i--) para.removeRun(i);
         return 1;
     }
@@ -991,7 +995,7 @@ public class DocumentTool {
 
     private String buildSep(int[] widths) {
         StringBuilder sb = new StringBuilder("+");
-        for (int w : widths) sb.append("-".repeat(w + 2)).append("+");
+        for (int w : widths) sb.repeat("-", w + 2).append("+");
         return sb.toString();
     }
 

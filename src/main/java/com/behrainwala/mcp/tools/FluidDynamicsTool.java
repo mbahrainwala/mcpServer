@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.Objects;
 
 /**
  * MCP tool for computational fluid dynamics calculations relevant to aerospace engineering.
@@ -79,7 +80,7 @@ public class FluidDynamicsTool {
             sb.append("  v₂ = ").append(fmt(v2solved)).append(" m/s  (solved)\n");
             sb.append("  q₂ = ½ρv₂² = ").append(fmt(dynP2)).append(" Pa\n");
             sb.append("  ΔP = P₁ - P₂ = ").append(fmt(p1 - p2)).append(" Pa\n");
-        } else if (p2 == null && v2 == null) {
+        } else if (p2 == null) {
             sb.append("  (provide either P₂ or v₂ to solve for the other)\n");
         } else {
             double lhs = p2 + 0.5 * density * v2 * v2 + density * g * h2val;
@@ -111,13 +112,10 @@ public class FluidDynamicsTool {
         if (velocity == null || length == null) return "Error: velocity and length are required.";
 
         double nu;
+        // default: air at sea level
         if (density != null && dynamicViscosity != null) {
             nu = dynamicViscosity / density;
-        } else if (kinematicViscosity != null) {
-            nu = kinematicViscosity;
-        } else {
-            nu = MU_AIR_SL / RHO_AIR_SL; // default: air at sea level
-        }
+        } else nu = Objects.requireNonNullElse(kinematicViscosity, MU_AIR_SL / RHO_AIR_SL);
 
         double Re = velocity * length / nu;
 
@@ -203,29 +201,26 @@ public class FluidDynamicsTool {
         double TStar = T0 * 2.0 / (g + 1.0);
         double PStar = P0 * Math.pow(2.0 / (g + 1.0), g / (g - 1.0));
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Mach Number & Compressible Flow\n");
-        sb.append("────────────────────────────────\n\n");
-        sb.append("GIVEN:\n");
-        sb.append("  v = ").append(fmt(velocity)).append(" m/s\n");
-        sb.append("  T = ").append(fmt(T)).append(" K\n");
-        sb.append("  P = ").append(fmt(P)).append(" Pa\n");
-        sb.append("  γ = ").append(fmt(g)).append("\n\n");
-        sb.append("RESULT:\n");
-        sb.append("  a = √(γRT) = ").append(fmt(a)).append(" m/s  (speed of sound)\n");
-        sb.append("  M = v/a    = ").append(fmt(M)).append("\n");
-        sb.append("  Regime     : ").append(regime).append("\n\n");
-        sb.append("ISENTROPIC STAGNATION (total) CONDITIONS:\n");
-        sb.append("  T₀ = T(1 + (γ-1)/2·M²)         = ").append(fmt(T0)).append(" K\n");
-        sb.append("  P₀ = P(1 + (γ-1)/2·M²)^(γ/γ-1) = ").append(fmt(P0)).append(" Pa\n");
-        sb.append("  ρ₀ = P₀/(R·T₀)                  = ").append(fmt(rho0)).append(" kg/m³\n");
-        sb.append("  q  = ½γPM²                       = ").append(fmt(dynP)).append(" Pa  (dynamic pressure)\n\n");
-        sb.append("CRITICAL (SONIC) CONDITIONS (at M=1):\n");
-        sb.append("  T* = ").append(fmt(TStar)).append(" K\n");
-        sb.append("  P* = ").append(fmt(PStar)).append(" Pa\n");
-        sb.append("  a* = ").append(fmt(aStar)).append(" m/s\n");
-
-        return sb.toString();
+        return "Mach Number & Compressible Flow\n" +
+                "────────────────────────────────\n\n" +
+                "GIVEN:\n" +
+                "  v = " + fmt(velocity) + " m/s\n" +
+                "  T = " + fmt(T) + " K\n" +
+                "  P = " + fmt(P) + " Pa\n" +
+                "  γ = " + fmt(g) + "\n\n" +
+                "RESULT:\n" +
+                "  a = √(γRT) = " + fmt(a) + " m/s  (speed of sound)\n" +
+                "  M = v/a    = " + fmt(M) + "\n" +
+                "  Regime     : " + regime + "\n\n" +
+                "ISENTROPIC STAGNATION (total) CONDITIONS:\n" +
+                "  T₀ = T(1 + (γ-1)/2·M²)         = " + fmt(T0) + " K\n" +
+                "  P₀ = P(1 + (γ-1)/2·M²)^(γ/γ-1) = " + fmt(P0) + " Pa\n" +
+                "  ρ₀ = P₀/(R·T₀)                  = " + fmt(rho0) + " kg/m³\n" +
+                "  q  = ½γPM²                       = " + fmt(dynP) + " Pa  (dynamic pressure)\n\n" +
+                "CRITICAL (SONIC) CONDITIONS (at M=1):\n" +
+                "  T* = " + fmt(TStar) + " K\n" +
+                "  P* = " + fmt(PStar) + " Pa\n" +
+                "  a* = " + fmt(aStar) + " m/s\n";
     }
 
     @Tool(name = "fluid_isentropic",
@@ -262,32 +257,29 @@ public class FluidDynamicsTool {
         // Mass flow parameter: ṁ√T₀/(A·P₀) = M·√(γ/R)·(1+(γ-1)/2·M²)^(-(γ+1)/(2(γ-1)))
         double mfp = M * Math.sqrt(g / R_AIR) * Math.pow(factor, -(g + 1.0) / (2.0 * (g - 1.0)));
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Isentropic Flow Relations\n");
-        sb.append("─────────────────────────\n\n");
-        sb.append("GIVEN:\n");
-        sb.append("  M  = ").append(fmt(M)).append("\n");
-        sb.append("  T₀ = ").append(fmt(T0)).append(" K\n");
-        sb.append("  P₀ = ").append(fmt(P0)).append(" Pa\n");
-        sb.append("  ρ₀ = ").append(fmt(rho0val)).append(" kg/m³\n");
-        sb.append("  γ  = ").append(fmt(g)).append("\n\n");
-        sb.append("STATIC CONDITIONS:\n");
-        sb.append("  T   = T₀/(1+(γ-1)/2·M²)         = ").append(fmt(T)).append(" K\n");
-        sb.append("  P   = P₀/(1+(γ-1)/2·M²)^(γ/γ-1) = ").append(fmt(P)).append(" Pa\n");
-        sb.append("  ρ   = ρ₀/(1+(γ-1)/2·M²)^(1/γ-1) = ").append(fmt(rho)).append(" kg/m³\n");
-        sb.append("  T/T₀ = ").append(fmt(T / T0)).append("\n");
-        sb.append("  P/P₀ = ").append(fmt(P / P0)).append("\n");
-        sb.append("  ρ/ρ₀ = ").append(fmt(rho / rho0val)).append("\n\n");
-        sb.append("FLOW PROPERTIES:\n");
-        sb.append("  a   = √(γRT) = ").append(fmt(a)).append(" m/s  (local speed of sound)\n");
-        sb.append("  v   = M·a    = ").append(fmt(v)).append(" m/s  (flow velocity)\n\n");
-        sb.append("AREA RATIO:\n");
-        sb.append("  A/A* = ").append(fmt(aRatio)).append("\n");
-        sb.append("  (A* is the throat area where M=1)\n\n");
-        sb.append("MASS FLOW PARAMETER:\n");
-        sb.append("  ṁ√T₀/(A·P₀) = ").append(sci(mfp)).append(" kg/(s·m²·Pa·K^0.5·√(J/kg·K))");
-
-        return sb.toString();
+        return "Isentropic Flow Relations\n" +
+                "─────────────────────────\n\n" +
+                "GIVEN:\n" +
+                "  M  = " + fmt(M) + "\n" +
+                "  T₀ = " + fmt(T0) + " K\n" +
+                "  P₀ = " + fmt(P0) + " Pa\n" +
+                "  ρ₀ = " + fmt(rho0val) + " kg/m³\n" +
+                "  γ  = " + fmt(g) + "\n\n" +
+                "STATIC CONDITIONS:\n" +
+                "  T   = T₀/(1+(γ-1)/2·M²)         = " + fmt(T) + " K\n" +
+                "  P   = P₀/(1+(γ-1)/2·M²)^(γ/γ-1) = " + fmt(P) + " Pa\n" +
+                "  ρ   = ρ₀/(1+(γ-1)/2·M²)^(1/γ-1) = " + fmt(rho) + " kg/m³\n" +
+                "  T/T₀ = " + fmt(T / T0) + "\n" +
+                "  P/P₀ = " + fmt(P / P0) + "\n" +
+                "  ρ/ρ₀ = " + fmt(rho / rho0val) + "\n\n" +
+                "FLOW PROPERTIES:\n" +
+                "  a   = √(γRT) = " + fmt(a) + " m/s  (local speed of sound)\n" +
+                "  v   = M·a    = " + fmt(v) + " m/s  (flow velocity)\n\n" +
+                "AREA RATIO:\n" +
+                "  A/A* = " + fmt(aRatio) + "\n" +
+                "  (A* is the throat area where M=1)\n\n" +
+                "MASS FLOW PARAMETER:\n" +
+                "  ṁ√T₀/(A·P₀) = " + sci(mfp) + " kg/(s·m²·Pa·K^0.5·√(J/kg·K))";
     }
 
     @Tool(name = "fluid_normal_shock",
@@ -435,11 +427,7 @@ public class FluidDynamicsTool {
         double A   = Math.PI * diameter * diameter / 4.0;
 
         double v;
-        if (velocity != null) {
-            v = velocity;
-        } else {
-            v = volumeFlowRate / A;
-        }
+        v = Objects.requireNonNullElseGet(velocity, () -> volumeFlowRate / A);
 
         double Q = v * A; // flow rate
         double Re = v * diameter / nu;
@@ -549,7 +537,7 @@ public class FluidDynamicsTool {
             sb.append("  v₂ = ").append(fmt(v2solved)).append(" m/s  (solved)\n");
             sb.append("  Area ratio A₂/A₁ = ").append(fmt(A2 / A1)).append("\n");
             sb.append("  Velocity ratio v₂/v₁ = ").append(fmt(v2solved / v1)).append("\n");
-        } else if (A2 != null && v2 != null) {
+        } else if (A2 != null) {
             double massFlow2 = r2 * A2 * v2;
             sb.append("SECTION 2 (verification):\n");
             sb.append("  A₂ = ").append(fmt(A2)).append(" m²\n");
@@ -625,7 +613,7 @@ public class FluidDynamicsTool {
         sb.append("ISA Atmosphere at ").append(fmt(altitude / 1000.0)).append(" km");
         if (dT != 0) sb.append(" (ISA").append(dT > 0 ? "+" : "").append(fmt(dT)).append(")");
         sb.append("\n");
-        sb.append("─".repeat(40)).append("\n\n");
+        sb.repeat("─", 40).append("\n\n");
         sb.append("  Altitude       = ").append(fmt(altitude)).append(" m  = ").append(fmt(altitude / 1000.0)).append(" km\n");
         sb.append("  Temperature    = ").append(fmt(T)).append(" K  = ").append(fmt(T_C)).append(" °C\n");
         sb.append("  Pressure       = ").append(fmt(P)).append(" Pa  = ").append(fmt(P_hPa)).append(" hPa\n");

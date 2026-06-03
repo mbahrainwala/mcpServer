@@ -85,9 +85,9 @@ public class ExcelTool {
                 FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
                 for (int si = 0; si < wb.getNumberOfSheets(); si++) {
                     Sheet sheet = wb.getSheetAt(si);
-                    sb.append("\n").append("═".repeat(60)).append("\n");
+                    sb.append("\n").repeat("═", 60).append("\n");
                     sb.append("Sheet: ").append(sheet.getSheetName()).append("\n");
-                    sb.append("═".repeat(60)).append("\n");
+                    sb.repeat("═", 60).append("\n");
                     renderSheet(sb, sheet, evaluator);
                     if (sb.length() > MAX_TEXT_LENGTH) {
                         sb.append("\n\n... [truncated — ").append(wb.getNumberOfSheets() - si - 1).append(" more sheet(s) not shown]");
@@ -103,34 +103,37 @@ public class ExcelTool {
     }
 
     @Tool(name = "excel_create",
-          description = "Create a professional .xlsx Excel workbook from structured content. "
-                  + "Optionally starts with a YAML frontmatter block (between --- lines).\n\n"
-                  + "FRONTMATTER (all optional):\n"
-                  + "  font: Calibri           # font family\n"
-                  + "  fontSize: 11            # base font size in points\n"
-                  + "  accentColor: \"#2E74B5\" # header row and accent colour (hex)\n"
-                  + "  alternateRows: true     # shade every other data row with a light tint\n"
-                  + "  freezeHeader: true      # freeze the first row of each sheet\n"
-                  + "  autoWidth: true         # auto-size column widths\n"
-                  + "  title: My Workbook      # document metadata\n"
-                  + "  author: Jane Smith\n\n"
-                  + "CONTENT SYNTAX:\n"
-                  + "  ## Sheet: Name          — start a new worksheet named Name\n"
-                  + "  # Heading text          — add a bold full-width heading row\n"
-                  + "  | Col1 | Col2 | Col3 |  — table (first row = header, styled with accent)\n"
-                  + "  |------|------|------|  — separator row (ignored)\n"
-                  + "  Formulas: start cell value with = e.g. =SUM(B2:B10)\n"
-                  + "  Cell format prefixes (add before value):\n"
-                  + "    {bold}text            — bold cell\n"
-                  + "    {currency}1234.56     — format as $1,234.56\n"
-                  + "    {pct}0.25             — format as 25.00%\n"
-                  + "    {date}2025-01-15      — format as date\n"
-                  + "    {int}1500             — format as integer with thousands separator\n"
-                  + "    {color:#FF0000}text   — font colour\n"
-                  + "    {bg:#FFF3E0}text      — cell background colour\n"
-                  + "  ::: widths 25 12 12 14  — set column widths in characters (A, B, C, ...)\n"
-                  + "  ::: freeze 1 0          — freeze N rows and M columns\n"
-                  + "  Multiple tables and headings are supported within a single sheet.")
+          description = """
+                  Create a professional .xlsx Excel workbook from structured content. \
+                  Optionally starts with a YAML frontmatter block (between --- lines).
+                  
+                  FRONTMATTER (all optional):
+                    font: Calibri           # font family
+                    fontSize: 11            # base font size in points
+                    accentColor: "#2E74B5" # header row and accent colour (hex)
+                    alternateRows: true     # shade every other data row with a light tint
+                    freezeHeader: true      # freeze the first row of each sheet
+                    autoWidth: true         # auto-size column widths
+                    title: My Workbook      # document metadata
+                    author: Jane Smith
+                  
+                  CONTENT SYNTAX:
+                    ## Sheet: Name          — start a new worksheet named Name
+                    # Heading text          — add a bold full-width heading row
+                    | Col1 | Col2 | Col3 |  — table (first row = header, styled with accent)
+                    |------|------|------|  — separator row (ignored)
+                    Formulas: start cell value with = e.g. =SUM(B2:B10)
+                    Cell format prefixes (add before value):
+                      {bold}text            — bold cell
+                      {currency}1234.56     — format as $1,234.56
+                      {pct}0.25             — format as 25.00%
+                      {date}2025-01-15      — format as date
+                      {int}1500             — format as integer with thousands separator
+                      {color:#FF0000}text   — font colour
+                      {bg:#FFF3E0}text      — cell background colour
+                    ::: widths 25 12 12 14  — set column widths in characters (A, B, C, ...)
+                    ::: freeze 1 0          — freeze N rows and M columns
+                    Multiple tables and headings are supported within a single sheet.""")
     public String excelCreate(
             @ToolParam(description = "Absolute path where the .xlsx file should be saved, "
                     + "e.g. 'C:/reports/budget.xlsx'. Parent directory must exist.") String outputPath,
@@ -170,23 +173,25 @@ public class ExcelTool {
     }
 
     @Tool(name = "excel_edit",
-          description = "Edit an existing .xlsx workbook using a JSON array of operations.\n\n"
-                  + "Supported operations:\n"
-                  + "  {\"type\":\"set_cell\",\"sheet\":\"Sheet1\",\"cell\":\"B2\",\"value\":1500}\n"
-                  + "  {\"type\":\"set_cell\",\"sheet\":\"Sheet1\",\"cell\":\"F2\",\"formula\":\"=SUM(B2:E2)\"}\n"
-                  + "  {\"type\":\"append_row\",\"sheet\":\"Sheet1\",\"values\":[\"Item\",100,200,\"=SUM(B{row}:C{row})\"]}\n"
-                  + "  {\"type\":\"insert_row\",\"sheet\":\"Sheet1\",\"after_row\":3,\"values\":[...]}\n"
-                  + "  {\"type\":\"delete_row\",\"sheet\":\"Sheet1\",\"row\":4}\n"
-                  + "  {\"type\":\"fill_formula\",\"sheet\":\"Sheet1\",\"range\":\"F2:F20\",\"formula\":\"=SUM(B{row}:E{row})\"}\n"
-                  + "  {\"type\":\"set_style\",\"sheet\":\"Sheet1\",\"range\":\"A1:F1\","
-                  + "\"bold\":true,\"bgColor\":\"#2E74B5\",\"fontColor\":\"#FFFFFF\"}\n"
-                  + "  {\"type\":\"set_column_width\",\"sheet\":\"Sheet1\",\"column\":\"A\",\"width\":25}\n"
-                  + "  {\"type\":\"freeze_panes\",\"sheet\":\"Sheet1\",\"rows\":1,\"cols\":0}\n"
-                  + "  {\"type\":\"add_sheet\",\"name\":\"New Sheet\"}\n"
-                  + "  {\"type\":\"rename_sheet\",\"from\":\"Sheet1\",\"to\":\"Summary\"}\n"
-                  + "  {\"type\":\"delete_sheet\",\"name\":\"OldSheet\"}\n"
-                  + "In values arrays and fill_formula, use {row} for 1-based row number, {col} for column letter.\n"
-                  + "Only .xlsx format is supported for editing.")
+          description = """
+                  Edit an existing .xlsx workbook using a JSON array of operations.
+                  
+                  Supported operations:
+                    {"type":"set_cell","sheet":"Sheet1","cell":"B2","value":1500}
+                    {"type":"set_cell","sheet":"Sheet1","cell":"F2","formula":"=SUM(B2:E2)"}
+                    {"type":"append_row","sheet":"Sheet1","values":["Item",100,200,"=SUM(B{row}:C{row})"]}
+                    {"type":"insert_row","sheet":"Sheet1","after_row":3,"values":[...]}
+                    {"type":"delete_row","sheet":"Sheet1","row":4}
+                    {"type":"fill_formula","sheet":"Sheet1","range":"F2:F20","formula":"=SUM(B{row}:E{row})"}
+                    {"type":"set_style","sheet":"Sheet1","range":"A1:F1",\
+                  "bold":true,"bgColor":"#2E74B5","fontColor":"#FFFFFF"}
+                    {"type":"set_column_width","sheet":"Sheet1","column":"A","width":25}
+                    {"type":"freeze_panes","sheet":"Sheet1","rows":1,"cols":0}
+                    {"type":"add_sheet","name":"New Sheet"}
+                    {"type":"rename_sheet","from":"Sheet1","to":"Summary"}
+                    {"type":"delete_sheet","name":"OldSheet"}
+                  In values arrays and fill_formula, use {row} for 1-based row number, {col} for column letter.
+                  Only .xlsx format is supported for editing.""")
     public String excelEdit(
             @ToolParam(description = "Absolute local file path to the .xlsx file to edit.") String source,
             @ToolParam(description = "JSON array of edit operations.") String operations,
@@ -584,7 +589,7 @@ public class ExcelTool {
 
     // ── Edit operations ───────────────────────────────────────────────────────
 
-    private void applyOperation(XSSFWorkbook wb, JsonNode op, String type) throws Exception {
+    private void applyOperation(XSSFWorkbook wb, JsonNode op, String type){
         switch (type) {
 
             case "set_cell" -> {
@@ -608,8 +613,8 @@ public class ExcelTool {
 
             case "insert_row" -> {
                 XSSFSheet sheet = requireSheet(wb, op);
-                int after = op.path("after_row").asInt(0);  // 1-based
-                int insertAt = after; // convert to 0-based insert position
+                // 1-based
+                int insertAt = op.path("after_row").asInt(0); // convert to 0-based insert position
                 if (insertAt <= sheet.getLastRowNum())
                     sheet.shiftRows(insertAt, sheet.getLastRowNum(), 1);
                 Row row = sheet.createRow(insertAt);
@@ -673,7 +678,7 @@ public class ExcelTool {
                         }
                         if (bold || resolvedFg != null) {
                             XSSFFont f = wb.createFont();
-                            XSSFFont of = (XSSFFont) wb.getFontAt(base.getFontIndex());
+                            XSSFFont of =  wb.getFontAt(base.getFontIndex());
                             f.setFontName(of.getFontName());
                             f.setFontHeightInPoints(of.getFontHeightInPoints());
                             if (bold) f.setBold(true);
@@ -767,7 +772,7 @@ public class ExcelTool {
 
     private String buildSep(int[] widths) {
         StringBuilder sb = new StringBuilder("+");
-        for (int w : widths) sb.append("-".repeat(w + 2)).append("+");
+        for (int w : widths) sb.repeat("-", w + 2).append("+");
         return sb.toString();
     }
 

@@ -66,7 +66,7 @@ class JsonToolTest {
         StringBuilder sb = new StringBuilder("{");
         for (int i = 0; i < 300; i++) {
             if (i > 0) sb.append(",");
-            sb.append("\"key").append(i).append("\":\"").append("x".repeat(20)).append("\"");
+            sb.append("\"key").append(i).append("\":\"").repeat("x", 20).append("\"");
         }
         sb.append("}");
         String result = tool.validateJson(sb.toString());
@@ -259,7 +259,7 @@ class JsonToolTest {
         StringBuilder sb = new StringBuilder("{");
         for (int i = 0; i < 400; i++) {
             if (i > 0) sb.append(",");
-            sb.append("\"key").append(i).append("\":\"").append("x".repeat(20)).append("\"");
+            sb.append("\"key").append(i).append("\":\"").repeat("x", 20).append("\"");
         }
         sb.append("}");
         String result = tool.transformJson(sb.toString(), "minify");

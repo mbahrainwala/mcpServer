@@ -74,7 +74,7 @@ public class CsvTool {
             if (rows.isEmpty()) return "";
 
             StringWriter sw = new StringWriter();
-            Object first = rows.get(0);
+            Object first = rows.getFirst();
 
             if (first instanceof Map<?, ?> firstMap) {
                 List<String> headers = firstMap.keySet().stream()
@@ -150,7 +150,7 @@ public class CsvTool {
                     }
                 }
             } else {
-                sb.append("Columns: ").append(records.get(0).size()).append(" (no header)\n");
+                sb.append("Columns: ").append(records.getFirst().size()).append(" (no header)\n");
             }
 
             return sb.toString();

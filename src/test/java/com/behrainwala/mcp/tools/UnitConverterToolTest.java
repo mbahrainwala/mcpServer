@@ -139,7 +139,7 @@ class UnitConverterToolTest {
 
     @Test
     void convert_tempDegreeSymbol() {
-        String result = tool.convert(100.0, "\u00b0c", "\u00b0f");
+        String result = tool.convert(100.0, "°c", "°f");
         assertThat(result).contains("212.00");
     }
 

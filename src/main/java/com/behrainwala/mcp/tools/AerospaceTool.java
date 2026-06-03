@@ -149,25 +149,23 @@ public class AerospaceTool {
         double Pratio  = Math.pow(f1 / f2, g / (g - 1));
         double rhoRatio = Math.pow(f1 / f2, 1.0 / (g - 1));
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Prandtl-Meyer Expansion Fan\n───────────────────────────\n\n");
-        sb.append("GIVEN:\n");
-        sb.append("  M₁ = ").append(fmt(M1)).append(",  Δν = ").append(fmt(turningAngleDeg))
-          .append("°,  γ = ").append(fmt(g)).append("\n\n");
-        sb.append("PRANDTL-MEYER FUNCTION  ν(M) = √((γ+1)/(γ-1))·arctan(√((γ-1)/(γ+1)·(M²-1))) − arctan(√(M²-1)):\n");
-        sb.append("  ν(M₁) = ").append(fmt(Math.toDegrees(nu1))).append("°\n");
-        sb.append("  ν(M₂) = ν(M₁) + Δν = ").append(fmt(Math.toDegrees(nu2))).append("°\n");
-        sb.append("  ν_max  = ").append(fmt(Math.toDegrees(nuMax))).append("°  (limit as M → ∞)\n\n");
-        sb.append("DOWNSTREAM:\n");
-        sb.append("  M₂ = ").append(fmt(M2)).append("  (solved: ν(M₂) = ν₂)\n");
-        sb.append("  μ₁ = arcsin(1/M₁) = ").append(fmt(mu1Deg)).append("°  (upstream Mach angle)\n");
-        sb.append("  μ₂ = arcsin(1/M₂) = ").append(fmt(mu2Deg)).append("°  (downstream Mach angle)\n\n");
-        sb.append("ISENTROPIC RATIOS (P₀, T₀ conserved — no entropy change):\n");
-        sb.append("  T₂/T₁ = ").append(fmt(Tratio)).append("\n");
-        sb.append("  P₂/P₁ = ").append(fmt(Pratio)).append("\n");
-        sb.append("  ρ₂/ρ₁ = ").append(fmt(rhoRatio)).append("\n\n");
-        sb.append("Note: expansion fans are isentropic — stagnation pressure is fully preserved (unlike shocks).");
-        return sb.toString();
+        return "Prandtl-Meyer Expansion Fan\n───────────────────────────\n\n" +
+                "GIVEN:\n" +
+                "  M₁ = " + fmt(M1) + ",  Δν = " + fmt(turningAngleDeg) +
+                "°,  γ = " + fmt(g) + "\n\n" +
+                "PRANDTL-MEYER FUNCTION  ν(M) = √((γ+1)/(γ-1))·arctan(√((γ-1)/(γ+1)·(M²-1))) − arctan(√(M²-1)):\n" +
+                "  ν(M₁) = " + fmt(Math.toDegrees(nu1)) + "°\n" +
+                "  ν(M₂) = ν(M₁) + Δν = " + fmt(Math.toDegrees(nu2)) + "°\n" +
+                "  ν_max  = " + fmt(Math.toDegrees(nuMax)) + "°  (limit as M → ∞)\n\n" +
+                "DOWNSTREAM:\n" +
+                "  M₂ = " + fmt(M2) + "  (solved: ν(M₂) = ν₂)\n" +
+                "  μ₁ = arcsin(1/M₁) = " + fmt(mu1Deg) + "°  (upstream Mach angle)\n" +
+                "  μ₂ = arcsin(1/M₂) = " + fmt(mu2Deg) + "°  (downstream Mach angle)\n\n" +
+                "ISENTROPIC RATIOS (P₀, T₀ conserved — no entropy change):\n" +
+                "  T₂/T₁ = " + fmt(Tratio) + "\n" +
+                "  P₂/P₁ = " + fmt(Pratio) + "\n" +
+                "  ρ₂/ρ₁ = " + fmt(rhoRatio) + "\n\n" +
+                "Note: expansion fans are isentropic — stagnation pressure is fully preserved (unlike shocks).";
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -384,7 +382,7 @@ public class AerospaceTool {
                     double T = v[0], D = v[1], V = v[2], W = v[3];
                     double excessThrust = T - D;
                     double ROC = excessThrust * V / W;
-                    double climbAngle = Math.toDegrees(Math.asin(Math.min(1.0, Math.max(-1.0, excessThrust / W))));
+                    double climbAngle = Math.toDegrees(Math.asin(Math.clamp(excessThrust / W, -1.0, 1.0)));
                     yield "Rate of Climb\n─────────────\n"
                             + "Formula: ROC = (T−D)·V/W\n\n"
                             + "  T = " + fmt(T) + " N,  D = " + fmt(D) + " N\n"
@@ -514,10 +512,11 @@ public class AerospaceTool {
                   + "Uses γ = 1.4, cp = 1004.5 J/(kg·K) for air.")
     public String turbomachinery(
             @ToolParam(description = "Formula: 'compressor', 'turbine', or 'euler'") String formula,
-            @ToolParam(description = "Comma-separated values:\n"
-                    + "  compressor: T01(K), P01(Pa), PR(>1), eta_c(0–1), [mass_flow(kg/s)]\n"
-                    + "  turbine   : T03(K), P03(Pa), PR(>1), eta_t(0–1), [mass_flow(kg/s)]\n"
-                    + "  euler     : blade_speed_U(m/s), whirl_in_Cw1(m/s), whirl_out_Cw2(m/s), axial_Ca(m/s)") String values) {
+            @ToolParam(description = """
+                    Comma-separated values:
+                      compressor: T01(K), P01(Pa), PR(>1), eta_c(0–1), [mass_flow(kg/s)]
+                      turbine   : T03(K), P03(Pa), PR(>1), eta_t(0–1), [mass_flow(kg/s)]
+                      euler     : blade_speed_U(m/s), whirl_in_Cw1(m/s), whirl_out_Cw2(m/s), axial_Ca(m/s)""") String values) {
 
         try {
             double[] v = parseValues(values);
@@ -643,9 +642,7 @@ public class AerospaceTool {
     }
 
     private double findWeakBeta(double M1, double thetaRad, double gamma) {
-        double mu      = Math.asin(1.0 / M1);
-        double betaMax = findBetaAtMaxTheta(M1, gamma);
-        double lo = mu, hi = betaMax;
+        double lo = Math.asin(1.0 / M1), hi = findBetaAtMaxTheta(M1, gamma);
         for (int i = 0; i < 80; i++) {
             double mid = (lo + hi) / 2;
             if (thetaFromBetaRad(M1, mid, gamma) < thetaRad) lo = mid;

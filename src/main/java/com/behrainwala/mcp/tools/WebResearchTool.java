@@ -64,10 +64,10 @@ public class WebResearchTool {
             if (url == null || url.isBlank() || url.startsWith("Search Error")) continue;
 
             fetched++;
-            sb.append("─".repeat(60)).append("\n");
+            sb.repeat("─", 60).append("\n");
             sb.append("Source ").append(fetched).append(": ").append(result.title()).append("\n");
             sb.append("URL: ").append(url).append("\n");
-            sb.append("─".repeat(60)).append("\n");
+            sb.repeat("─", 60).append("\n");
 
             if (!result.snippet().isBlank()) {
                 sb.append("Summary: ").append(result.snippet()).append("\n\n");
@@ -96,6 +96,6 @@ public class WebResearchTool {
 
     private int clamp(Integer value, int min, int max, int defaultVal) {
         if (value == null) return defaultVal;
-        return Math.max(min, Math.min(max, value));
+        return Math.clamp(max, min, value);
     }
 }
