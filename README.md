@@ -90,6 +90,24 @@ date/time, Wikipedia, unit conversion, Excel assistance, and more — all with *
 | `csv_to_json` | Parse CSV text into a JSON array of objects (with header) or arrays (without).         |
 | `json_to_csv` | Convert a JSON array of objects or arrays to well-formed CSV.                          |
 | `csv_stats` | Analyze CSV data: column names, row count, type detection, sample values, min/max/avg. |
+| **AI / LLM Enhancement Tools** | Help a local LLM prepare and reason about text and embeddings without external services. |
+| `count_tokens` | Estimate token count for GPT / Claude / Llama / Mistral families before sending a prompt. |
+| `chunk_text` | Split text into overlapping word- or char-based chunks (sentence-aware) for RAG / embeddings. |
+| `extract_keywords` | TF-weighted keyword extraction with English stop-word filtering — for tagging or query building. |
+| `text_similarity` | Compare two texts via cosine, Jaccard, Levenshtein, or 3-gram shingle. Returns a 0–1 score. |
+| `detect_language` | Detect language from a text (English, Spanish, French, German, Italian, Portuguese, Dutch). |
+| `extract_sentences` | TextRank-style sentence extraction — pick the N most informative sentences to compress context. |
+| `vector_similarity` | Cosine / Euclidean / Manhattan / dot / Pearson between two numeric vectors. |
+| `vector_normalize` | Normalize a vector to unit L2 length (useful before cosine → dot product). |
+| `vector_top_k` | Find the top-K most similar candidate vectors to a query — local nearest-neighbor search. |
+| `vector_centroid` | Compute the mean (centroid) of a set of vectors — for clustering or query expansion. |
+| `html_to_markdown` | Convert HTML to Markdown (headings, lists, code blocks, links, tables) — cleaner LLM input. |
+| `markdown_to_text` | Strip Markdown formatting and return plain text. |
+| `extract_code_blocks` | Pull fenced code blocks (with language tags) out of Markdown — optional language filter. |
+| `prompt_template` | Render a Mustache-style `{{var}}` template; reports filled and missing variables. |
+| `json_to_schema` | Infer a JSON Schema (draft 2020-12) from one or more example JSON documents. |
+| `build_few_shot_prompt` | Assemble a few-shot prompt from a task description and labeled (input, output) examples. |
+| `fit_to_context` | Trim a conversation message list (oldest first) to fit a target token budget; keeps system + N recent. |
 
 ## Token-Saving Features
 
@@ -148,6 +166,14 @@ Rather than asking the LLM to reason through calculations, delegate to specialis
 - **Formulas:** *"Sum sales where region is East"* → `excel_formula_build` → `=SUMIFS(...)`
 - **Charts:** *"Best chart for monthly revenue?"* → `excel_chart_recommend` → line chart
 - **VBA:** *"Macro to export each sheet as PDF"* → `excel_vba_snippet`
+- **Token budget:** *"Will this fit in 4k context?"* → `count_tokens` → estimate before sending
+- **RAG prep:** *"Chunk this document for embedding"* → `chunk_text(text, chunkSize=512, overlap=64)` → sentence-aware splits
+- **Nearest neighbor:** *"Find the closest of these 50 vectors"* → `vector_top_k` → ranked matches, no vector DB needed
+- **Structured output:** *"Build a JSON Schema from this example"* → `json_to_schema` → drop into a constrained-decoding prompt
+- **Prompt template:** *"Render this template with these vars"* → `prompt_template` → filled prompt + missing-var report
+- **Few-shot:** *"Build a 3-example classification prompt"* → `build_few_shot_prompt`
+- **Web ingest:** *"Convert this page to clean Markdown for the LLM"* → `html_to_markdown` → token-efficient input
+- **Summarization:** *"Pull the 5 most informative sentences"* → `extract_sentences` → compress before sending to LLM
 
 ## Prerequisites
 
@@ -360,6 +386,9 @@ MCP_SEARCH_MAX_RESULTS=20 java -jar target/llm-studio-mcp-1.0.0.jar
                                   │  encode, hash, uuid     (local)
                                   │  datetime, units        (local)
                                   │  excel_* formulas/data  (local)
+                                  │  count_tokens, chunk_*  (local)
+                                  │  vector_*, embedding    (local)
+                                  │  markdown, prompt_*     (local)
                                   └──────────────────────────┘
 ```
 
@@ -392,6 +421,11 @@ MCP_SEARCH_MAX_RESULTS=20 java -jar target/llm-studio-mcp-1.0.0.jar
 | **Excel Tools** | |
 | `tools/ExcelFormulaTool.java` | `excel_function_lookup`, `excel_formula_explain`, `excel_formula_build` |
 | `tools/ExcelDataTool.java` | `excel_analyze_data`, `excel_chart_recommend`, `excel_conditional_format`, `excel_pivot_guide`, `excel_vba_snippet`, `excel_shortcut_reference` |
+| **AI / LLM Tools** | |
+| `tools/AiTextTool.java` | `count_tokens`, `chunk_text`, `extract_keywords`, `text_similarity`, `detect_language`, `extract_sentences` |
+| `tools/EmbeddingTool.java` | `vector_similarity`, `vector_normalize`, `vector_top_k`, `vector_centroid` |
+| `tools/MarkdownTool.java` | `html_to_markdown`, `markdown_to_text`, `extract_code_blocks` |
+| `tools/PromptTool.java` | `prompt_template`, `json_to_schema`, `build_few_shot_prompt`, `fit_to_context` |
 | **Services** | |
 | `service/WebSearchService.java` | DuckDuckGo search implementation |
 | `service/WebContentService.java` | HTML fetch and text extraction |

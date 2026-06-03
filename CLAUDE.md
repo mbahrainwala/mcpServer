@@ -70,7 +70,8 @@ src/main/java/com/behrainwala/mcp/
     ├── NumberBaseTool.java
     ├── ProbabilityTool.java
     ├── AstronomyTool.java
-    └── SqlHelperTool.java
+    ├── SqlHelperTool.java
+    └── StockTool.java
 ```
 
 ## Adding a New Tool
@@ -217,3 +218,27 @@ Health: `health_bmi`, `health_bmr`, `health_macro_calculator`, `health_heart_rat
 Network: `network_subnet_calculator`, `network_ip_info`, `network_cidr_range`, `network_port_reference`, `network_subnet_compare`
 
 Other: `generate_uuid`, `generate_password`, `generate_lorem_ipsum`, `generate_fake_data`, `generate_test_dataset`, `generate_random`, `generate_sequence`, `number_base_convert`, `number_ieee754`, `number_twos_complement`, `number_bitwise`, `number_ascii_table`, `color_convert`, `color_contrast`, `color_palette`, `define_word`, `cron_explain`, `cron_build`, `sql_format`, `sql_explain`, `sql_build`, `sql_reference`, `probability_combinatorics`, `probability_distribution`, `probability_bayes`, `probability_expected_value`, `probability_markov_chain`, `astronomy_planet_info`, `astronomy_star_properties`, `astronomy_orbital_mechanics`, `astronomy_moon_phase`
+
+### Stock Analysis (5 tools)
+Uses Yahoo Finance — no API key required. Session crumb is auto-refreshed.
+
+| Tool | Key Params | Notes |
+|---|---|---|
+| `stock_quote` | `symbols` (1–5, comma-separated) | Batch real-time quotes |
+| `stock_analyze` | `symbol` | Deep fundamentals: P/E, P/B, margins, ROE, analyst targets, business summary |
+| `stock_history` | `symbol`, `period` (5d/1mo/3mo/6mo/1y/2y/5y/ytd) | OHLCV + SMA-20/50 |
+| `portfolio_analyze` | `holdings` JSON array `[{symbol, shares, avgCost}]` | P&L, allocation %, concentration warnings |
+| `portfolio_suggest` | `holdings`, `investmentAmount`, `riskProfile` | Full analysis + sector gaps + investment framework |
+
+Holdings JSON format: `[{"symbol":"AAPL","shares":10,"avgCost":150.00}, ...]`
+
+### AI / LLM Enhancement (15 tools)
+Designed to help a local LLM prepare, analyze, and budget text + embeddings without round-trips to external services.
+
+Text & language (AiTextTool): `count_tokens`, `chunk_text`, `extract_keywords`, `text_similarity`, `detect_language`, `extract_sentences`
+
+Embeddings (EmbeddingTool): `vector_similarity` (cosine/euclidean/manhattan/dot/pearson), `vector_normalize`, `vector_top_k`, `vector_centroid`
+
+Markdown (MarkdownTool): `html_to_markdown`, `markdown_to_text`, `extract_code_blocks`
+
+Prompt engineering (PromptTool): `prompt_template` (Mustache), `json_to_schema` (infer JSON Schema from example), `build_few_shot_prompt`, `fit_to_context` (trim message list to token budget)

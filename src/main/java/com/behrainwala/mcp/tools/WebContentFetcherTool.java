@@ -38,10 +38,16 @@ public class WebContentFetcherTool {
 
         String content = contentService.fetchAndExtract(url);
 
-        int limit = (maxChars != null && maxChars > 0) ? maxChars : 5000;
-        if (content.length() > limit) {
-            content = content.substring(0, limit)
-                    + "\n\n[Truncated at " + limit + " chars — pass a larger maxChars to read more]";
+        // maxChars contract: null → default 5000, 0 → unlimited (server cap applies), >0 → cap
+        if (maxChars == null) {
+            int limit = 5000;
+            if (content.length() > limit) {
+                content = content.substring(0, limit)
+                        + "\n\n[Truncated at " + limit + " chars — pass a larger maxChars to read more]";
+            }
+        } else if (maxChars > 0 && content.length() > maxChars) {
+            content = content.substring(0, maxChars)
+                    + "\n\n[Truncated at " + maxChars + " chars — pass a larger maxChars to read more]";
         }
 
         return content;

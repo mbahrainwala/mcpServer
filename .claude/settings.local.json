@@ -46,7 +46,10 @@
       "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ sin\\(PI.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
       "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ Characters that fail.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
       "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ which will also fail.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
-      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ --5 =>.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)"
+      "Bash(sed -i '/^[[:space:]]*\\\\/\\\\/ --5 =>.*$/d' src/test/java/com/behrainwala/mcp/tools/MathToolTest.java)",
+      "Bash(Get-Content *)",
+      "mcp__behrainwala-mcp__stock_quote",
+      "mcp__behrainwala-mcp__web_research"
     ]
   }
 }

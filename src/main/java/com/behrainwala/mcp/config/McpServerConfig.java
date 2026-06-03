@@ -61,7 +61,23 @@ public class McpServerConfig {
             DocumentTool documentTool,
             ExcelTool excelTool,
             // Data tools
-            CsvTool csvTool) {
+            CsvTool csvTool,
+            // Network & utility tools
+            NetworkTool networkTool,
+            ColorTool colorTool,
+            DataGeneratorTool dataGeneratorTool,
+            NumberBaseTool numberBaseTool,
+            ProbabilityTool probabilityTool,
+            AstronomyTool astronomyTool,
+            SqlHelperTool sqlHelperTool,
+            FinanceTool financeTool,
+            HealthTool healthTool,
+            StockTool stockTool,
+            // AI / LLM enhancement tools
+            AiTextTool aiTextTool,
+            EmbeddingTool embeddingTool,
+            MarkdownTool markdownTool,
+            PromptTool promptTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
@@ -92,7 +108,21 @@ public class McpServerConfig {
                         imageTool,
                         documentTool,
                         excelTool,
-                        csvTool
+                        csvTool,
+                        networkTool,
+                        colorTool,
+                        dataGeneratorTool,
+                        numberBaseTool,
+                        probabilityTool,
+                        astronomyTool,
+                        sqlHelperTool,
+                        financeTool,
+                        healthTool,
+                        stockTool,
+                        aiTextTool,
+                        embeddingTool,
+                        markdownTool,
+                        promptTool
                 )
                 .build();
     }
@@ -101,7 +131,6 @@ public class McpServerConfig {
      * Registers the pdf_to_images tool directly as a SyncToolSpecification so we can
      * return MCP ImageContent (base64 JPEG) instead of plain text. This allows LLMs
      * to use vision to decode image-based / scanned PDFs.
-     *
      * Disabled: local LLMs do not handle ImageContent well and get confused by this tool.
      * pdf_to_text now reports image-only PDFs with a clear message instead.
      */
@@ -206,7 +235,7 @@ public class McpServerConfig {
                         // Add each page as an ImageContent
                         for (int i = 0; i < result.base64Images().size(); i++) {
                             content.add(new McpSchema.ImageContent(
-                                    (McpSchema.Annotations) null,
+                                    null,
                                     result.base64Images().get(i),
                                     "image/jpeg"
                             ));
