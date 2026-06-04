@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -837,6 +840,67 @@ class StockToolTest {
     }
 
     // =========================================================================
+    //  Shared JSON fixtures for buildStockReview / renderEtfProfile tests
+    // =========================================================================
+
+    /** Minimal valid quoteSummary data node for a stock (NVDA-like). */
+    private JsonNode stockData(String recKey, int strongBuy, int buy, int hold,
+                               int sell, int strongSell,
+                               int prevSB, int prevBuy,
+                               double curPrice, double tgtMean) throws Exception {
+        return mapper.readTree(String.format("""
+                {
+                  "price": {
+                    "regularMarketPrice": {"raw": %f},
+                    "longName": "Test Corp"
+                  },
+                  "financialData": {
+                    "recommendationKey": "%s",
+                    "recommendationMean": {"raw": 1.5},
+                    "numberOfAnalystOpinions": {"raw": 30},
+                    "targetLowPrice": {"raw": 150.0},
+                    "targetMeanPrice": {"raw": %f},
+                    "targetHighPrice": {"raw": 320.0}
+                  },
+                  "recommendationTrend": {
+                    "trend": [
+                      {"period":"0m","strongBuy":%d,"buy":%d,"hold":%d,"sell":%d,"strongSell":%d},
+                      {"period":"-1m","strongBuy":%d,"buy":%d,"hold":5,"sell":1,"strongSell":0}
+                    ]
+                  },
+                  "upgradeDowngradeHistory": {"history": []}
+                }
+                """,
+                curPrice, recKey, tgtMean,
+                strongBuy, buy, hold, sell, strongSell,
+                prevSB, prevBuy));
+    }
+
+    private JsonNode stockDataWithHistory(long epoch1, String action1,
+                                          long epoch2, String action2) throws Exception {
+        return mapper.readTree(String.format("""
+                {
+                  "price": {"regularMarketPrice": {"raw": 200.0}, "longName": "Test Corp"},
+                  "financialData": {
+                    "recommendationKey": "buy",
+                    "recommendationMean": {"raw": 2.0},
+                    "numberOfAnalystOpinions": {"raw": 20},
+                    "targetMeanPrice": {"raw": 240.0},
+                    "targetLowPrice": {"raw": 200.0},
+                    "targetHighPrice": {"raw": 280.0}
+                  },
+                  "recommendationTrend": {"trend": []},
+                  "upgradeDowngradeHistory": {
+                    "history": [
+                      {"epochGradeDate":%d,"firm":"Goldman Sachs","toGrade":"Buy","fromGrade":"Neutral","action":"%s"},
+                      {"epochGradeDate":%d,"firm":"Morgan Stanley","toGrade":"Overweight","fromGrade":"","action":"%s"}
+                    ]
+                  }
+                }
+                """, epoch1, action1, epoch2, action2));
+    }
+
+    // =========================================================================
     //  stock_review — input validation
     // =========================================================================
 
@@ -955,6 +1019,586 @@ class StockToolTest {
             // First ". " is after "Inc" so result ends at "Apple Inc."
             assertThat(result).startsWith("Apple Inc.");
             assertThat(result).doesNotContain("Extra sentence");
+        }
+
+        @Test
+        void exactly260CharsNotTruncated() {
+            // Exactly 260 chars with no sentence boundary — should be returned as-is
+            String s = "A".repeat(260);
+            assertThat(StockTool.twoSentences(s)).isEqualTo(s);
+        }
+
+        @Test
+        void exactly261CharsTruncatedWith3Dots() {
+            String s = "A".repeat(261);
+            String result = StockTool.twoSentences(s);
+            assertThat(result).hasSize(260);
+            assertThat(result).endsWith("...");
+        }
+    }
+
+    // =========================================================================
+    //  buildStockReview — all branches with mock JsonNode data
+    // =========================================================================
+
+    @Nested
+    class BuildStockReviewTests {
+
+        @Test
+        void strongBuyRatingIsBullish() throws Exception {
+            JsonNode data = stockData("strong_buy", 25, 5, 0, 0, 0, 20, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString())
+                    .contains("STRONG BUY")
+                    .contains("BULLISH");
+        }
+
+        @Test
+        void buyRatingIsBullish() throws Exception {
+            JsonNode data = stockData("buy", 0, 20, 5, 0, 0, 0, 18, 200.0, 250.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("BULLISH");
+        }
+
+        @Test
+        void holdRatingIsNeutral() throws Exception {
+            JsonNode data = stockData("hold", 0, 0, 20, 0, 0, 0, 0, 200.0, 200.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("NEUTRAL");
+        }
+
+        @Test
+        void sellRatingIsBearish() throws Exception {
+            JsonNode data = stockData("sell", 0, 0, 5, 15, 0, 0, 0, 200.0, 180.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("BEARISH");
+        }
+
+        @Test
+        void strongSellRatingIsBearish() throws Exception {
+            JsonNode data = stockData("strong_sell", 0, 0, 2, 5, 10, 0, 0, 200.0, 160.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("BEARISH");
+        }
+
+        @Test
+        void upsideComputedFromCurrentAndMeanTarget() throws Exception {
+            // curPrice=200, tgtMean=240 → +20.0% upside
+            JsonNode data = stockData("buy", 10, 10, 5, 0, 0, 8, 8, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("+20.0%");
+        }
+
+        @Test
+        void targetsAndRangeShownWhenPresent() throws Exception {
+            JsonNode data = stockData("buy", 10, 10, 5, 0, 0, 8, 8, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            String out = sb.toString();
+            assertThat(out).contains("$150.00");   // target low
+            assertThat(out).contains("$240.00");   // target mean
+            assertThat(out).contains("$320.00");   // target high
+        }
+
+        @Test
+        void recommendationTrendTableRendered() throws Exception {
+            JsonNode data = stockData("buy", 15, 8, 4, 1, 0, 12, 6, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            String out = sb.toString();
+            assertThat(out)
+                    .contains("RECOMMENDATION TREND")
+                    .contains("StrongBuy")
+                    .contains("Current")
+                    .contains("% bull");
+        }
+
+        @Test
+        void trendTableBullishScoreCalculated() throws Exception {
+            // 15 strongBuy + 8 buy + 4 hold + 1 sell = 28 total → (15+8)/28 = 82% bull
+            JsonNode data = stockData("buy", 15, 8, 4, 1, 0, 12, 6, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("82% bull");
+        }
+
+        @Test
+        void trendTablePeriodLabelFormatted() throws Exception {
+            JsonNode data = stockData("buy", 10, 5, 3, 0, 0, 8, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            // "-1m" should become "1 months ago" not "-1m"
+            assertThat(sb.toString()).contains("months ago");
+        }
+
+        @Test
+        void trendRisingIndicatedWithUpArrow() throws Exception {
+            // currBull = 25+5=30, prevBull = 20+4=24 → rising ↑
+            JsonNode data = stockData("buy", 25, 5, 3, 0, 0, 20, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("↑");
+        }
+
+        @Test
+        void trendFallingIndicatedWithDownArrow() throws Exception {
+            // currBull = 5+2=7, prevBull = 20+4=24 → falling ↓
+            JsonNode data = stockData("buy", 5, 2, 10, 3, 0, 20, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("↓");
+        }
+
+        @Test
+        void trendUnchangedIndicatedWithRightArrow() throws Exception {
+            // currBull = 20+4=24, prevBull = 20+4=24 → unchanged →
+            JsonNode data = stockData("buy", 20, 4, 3, 0, 0, 20, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("→");
+        }
+
+        @Test
+        void emptyTrendSectionSkipped() throws Exception {
+            JsonNode data = mapper.readTree("""
+                    {
+                      "price": {"regularMarketPrice": {"raw": 200.0}, "longName": "Test"},
+                      "financialData": {
+                        "recommendationKey": "buy",
+                        "recommendationMean": {"raw": 2.0},
+                        "numberOfAnalystOpinions": {"raw": 10},
+                        "targetMeanPrice": {"raw": 230.0},
+                        "targetLowPrice":  {"raw": 190.0},
+                        "targetHighPrice": {"raw": 260.0}
+                      },
+                      "recommendationTrend": {"trend": []},
+                      "upgradeDowngradeHistory": {"history": []}
+                    }
+                    """);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString())
+                    .doesNotContain("RECOMMENDATION TREND")
+                    .contains("SENTIMENT SUMMARY");
+        }
+
+        @Test
+        void emptyHistorySectionSkipped() throws Exception {
+            JsonNode data = stockData("buy", 10, 5, 3, 0, 0, 8, 4, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).doesNotContain("RECENT UPGRADES");
+        }
+
+        @Test
+        void upgradeActionLabelledCorrectly() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600; // 1 hour ago
+            JsonNode data = stockDataWithHistory(recent, "up", recent - 86400, "main");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("UPGRADE");
+        }
+
+        @Test
+        void downgradeActionLabelledCorrectly() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = stockDataWithHistory(recent, "down", recent - 86400, "main");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("DOWNGRADE");
+        }
+
+        @Test
+        void reiterateActionLabelledCorrectly() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = stockDataWithHistory(recent, "main", recent - 86400, "main");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("REITERATE");
+        }
+
+        @Test
+        void gradeChangeWithFromAndToShown() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = stockDataWithHistory(recent, "up", recent - 86400, "main");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            // "Neutral → Buy" should appear
+            assertThat(sb.toString()).contains("Neutral → Buy");
+        }
+
+        @Test
+        void gradeChangeWithNoFromGradeShowsToOnly() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = stockDataWithHistory(recent - 86400, "main", recent, "main");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            // No "fromGrade" for the "main" entry, just the toGrade "Overweight"
+            assertThat(sb.toString()).contains("Overweight");
+        }
+
+        @Test
+        void recentUpgradesCountedInSentenceSummary() throws Exception {
+            // Both entries are within the last 30 days
+            long recent1 = System.currentTimeMillis() / 1000 - 3600;
+            long recent2 = System.currentTimeMillis() / 1000 - 86400;
+            JsonNode data = stockDataWithHistory(recent1, "up", recent2, "up");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("2 upgrade(s)");
+        }
+
+        @Test
+        void recentDowngradesCountedInSentenceSummary() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = stockDataWithHistory(recent, "down", recent - 3600, "down");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("2 downgrade(s)");
+        }
+
+        @Test
+        void oldHistoryNotCountedIn30DayWindow() throws Exception {
+            // One upgrade 31 days ago — should not appear in the 30-day count
+            long old = System.currentTimeMillis() / 1000 - 31L * 24 * 3600;
+            JsonNode data = stockDataWithHistory(old, "up", old - 86400, "up");
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).doesNotContain("upgrade(s)");
+        }
+
+        @Test
+        void firmNameTruncatedAt24Chars() throws Exception {
+            long recent = System.currentTimeMillis() / 1000 - 3600;
+            JsonNode data = mapper.readTree(String.format("""
+                    {
+                      "price": {"regularMarketPrice": {"raw": 200.0}, "longName": "Test"},
+                      "financialData": {
+                        "recommendationKey": "buy",
+                        "recommendationMean": {"raw": 2.0},
+                        "numberOfAnalystOpinions": {"raw": 10},
+                        "targetMeanPrice": {"raw": 230.0},
+                        "targetLowPrice": {"raw": 190.0},
+                        "targetHighPrice": {"raw": 270.0}
+                      },
+                      "recommendationTrend": {"trend": []},
+                      "upgradeDowngradeHistory": {
+                        "history": [{"epochGradeDate":%d,"firm":"VeryLongFirmNameThatExceeds24Characters",
+                                     "toGrade":"Buy","fromGrade":"","action":"up"}]
+                      }
+                    }
+                    """, recent));
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            // substring(0, 23) = chars 0-22 = 23 chars, then "…"
+            assertThat(sb.toString()).contains("VeryLongFirmNameThatExc…");
+        }
+
+        @Test
+        void missingTargetMeanSkipsTargetLines() throws Exception {
+            JsonNode data = mapper.readTree("""
+                    {
+                      "price": {"regularMarketPrice": {"raw": 200.0}, "longName": "Test"},
+                      "financialData": {
+                        "recommendationKey": "buy",
+                        "recommendationMean": {"raw": 2.0},
+                        "numberOfAnalystOpinions": {"raw": 10}
+                      },
+                      "recommendationTrend": {"trend": []},
+                      "upgradeDowngradeHistory": {"history": []}
+                    }
+                    """);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString())
+                    .doesNotContain("Targets:")
+                    .doesNotContain("Upside:");
+        }
+
+        @Test
+        void zeroCurPriceSkipsUpsideCalc() throws Exception {
+            // curPrice=0 → upside=NaN, so upside line shows N/A not a number
+            JsonNode data = stockData("buy", 10, 5, 3, 0, 0, 8, 4, 0.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString()).contains("N/A");
+        }
+
+        @Test
+        void analystCountAndUpsideInSentenceSummary() throws Exception {
+            // 30 analysts, curPrice=200, tgtMean=240 → +20%
+            JsonNode data = stockData("buy", 10, 10, 5, 0, 0, 8, 8, 200.0, 240.0);
+            StringBuilder sb = new StringBuilder();
+            tool.buildStockReview(sb, "TEST", data);
+            assertThat(sb.toString())
+                    .contains("30 analysts cover TEST")
+                    .contains("+20.0% upside");
+        }
+    }
+
+    // =========================================================================
+    //  renderEtfProfile — ETF PROFILE section rendering
+    // =========================================================================
+
+    @Nested
+    class RenderEtfProfileTests {
+
+        private JsonNode makeProfile(double expRatio, double stockPos,
+                                     double bondPos, double cashPos,
+                                     boolean includeEquityHoldings) throws Exception {
+            String eqh = includeEquityHoldings
+                    ? """
+                      ,"equityHoldings":{
+                        "priceToEarnings":{"raw":27.5},
+                        "priceToBook":{"raw":4.8},
+                        "priceToSales":{"raw":2.9},
+                        "priceToCashflow":{"raw":20.1}
+                      }
+                      """
+                    : "";
+            return mapper.readTree(String.format("""
+                    {
+                      "fundProfile": {
+                        "family": "SPDR",
+                        "categoryName": "Large Blend",
+                        "legalType": "Exchange Traded Fund",
+                        "feesExpensesInvestment": {
+                          "annualReportExpenseRatio": {"raw": %f}
+                        }
+                      },
+                      "topHoldings": {
+                        "stockPosition": {"raw": %f},
+                        "bondPosition": {"raw": %f},
+                        "cashPosition": {"raw": %f}
+                        %s
+                      },
+                      "price": {
+                        "regularMarketPrice": {"raw": 758.54}
+                      }
+                    }
+                    """, expRatio, stockPos, bondPos, cashPos, eqh));
+        }
+
+        @Test
+        void etfFamilyAndCategoryShown() throws Exception {
+            JsonNode d = makeProfile(0.0009, 0.99, 0.0, 0.01, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString())
+                    .contains("SPDR")
+                    .contains("Large Blend")
+                    .contains("Exchange Traded Fund");
+        }
+
+        @Test
+        void expenseRatioDisplayedCorrectly() throws Exception {
+            // SPY: 0.0009 → 0.0900%  and annual cost = $9.00
+            JsonNode d = makeProfile(0.0009, 0.99, 0.0, 0.01, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString())
+                    .contains("0.0900%")
+                    .contains("$9.00");
+        }
+
+        @Test
+        void zeroExpenseRatioHidden() throws Exception {
+            JsonNode d = makeProfile(0.0, 0.99, 0.0, 0.0, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString()).doesNotContain("Expense Ratio:");
+        }
+
+        @Test
+        void allocationStocksOnlyShown() throws Exception {
+            JsonNode d = makeProfile(0.0003, 1.0, 0.0, 0.0, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString()).contains("100.0% stocks");
+        }
+
+        @Test
+        void allocationBondsIncluded() throws Exception {
+            JsonNode d = makeProfile(0.0003, 0.6, 0.35, 0.05, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            String out = sb.toString();
+            assertThat(out).contains("60.0% stocks");
+            assertThat(out).contains("35.0% bonds");
+            assertThat(out).contains("5.0% cash");
+        }
+
+        @Test
+        void equityHoldingsMetricsShown() throws Exception {
+            JsonNode d = makeProfile(0.0009, 0.99, 0.0, 0.01, true);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString())
+                    .contains("P/E 27.5")
+                    .contains("P/B 4.8")
+                    .contains("P/S 2.9")
+                    .contains("P/CF 20.1");
+        }
+
+        @Test
+        void noEquityHoldingsMetricsWhenAbsent() throws Exception {
+            JsonNode d = makeProfile(0.0009, 0.99, 0.0, 0.01, false);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString()).doesNotContain("Holdings avg:");
+        }
+
+        @Test
+        void fallbackToNetExpRatioWhenAnnualMissing() throws Exception {
+            JsonNode d = mapper.readTree("""
+                    {
+                      "fundProfile": {
+                        "family": "Vanguard", "categoryName": "Bond", "legalType": "ETF",
+                        "feesExpensesInvestment": {"netExpRatio": {"raw": 0.0003}}
+                      },
+                      "topHoldings": {},
+                      "price": {"regularMarketPrice": {"raw": 85.0}}
+                    }
+                    """);
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderEtfProfile(sb, d.path("fundProfile"),
+                    d.path("topHoldings"), d.path("price"));
+            assertThat(sb.toString()).contains("0.0300%");
+        }
+    }
+
+    // =========================================================================
+    //  renderHoldingsTable — holdings table rendering
+    // =========================================================================
+
+    @Nested
+    class RenderHoldingsTableTests {
+
+        @Test
+        void basicHoldingRendered() {
+            List<String> syms   = List.of("AAPL");
+            List<String> names  = List.of("Apple Inc.");
+            List<Double> wts    = List.of(0.0713);
+            Map<String, String[]> det = Map.of("AAPL",
+                    new String[]{"Technology", "Apple designs consumer electronics."});
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 1, syms, names, wts, det);
+            String out = sb.toString();
+            assertThat(out)
+                    .contains("1.")
+                    .contains("AAPL")
+                    .contains("Apple Inc.")
+                    .contains("7.13%")
+                    .contains("Technology");
+        }
+
+        @Test
+        void descriptionWordWrapped() {
+            List<String> syms  = List.of("NVDA");
+            List<String> names = List.of("NVIDIA Corporation");
+            List<Double> wts   = List.of(0.062);
+            String longDesc = "NVIDIA designs graphics processing units used in gaming and "
+                    + "artificial intelligence workloads across data center deployments worldwide.";
+            Map<String, String[]> det = Map.of("NVDA",
+                    new String[]{"Technology", longDesc});
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 1, syms, names, wts, det);
+            // Each line of the description should not exceed the wrap width + indent
+            for (String line : sb.toString().split("\n")) {
+                assertThat(line.length()).isLessThanOrEqualTo(85);
+            }
+        }
+
+        @Test
+        void missingDetailsFallToNA() {
+            List<String> syms  = List.of("XYZ");
+            List<String> names = List.of("Unknown Corp");
+            List<Double> wts   = List.of(0.05);
+            Map<String, String[]> det = Map.of(); // no entry for XYZ
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 1, syms, names, wts, det);
+            assertThat(sb.toString()).contains("N/A");
+        }
+
+        @Test
+        void longNameTruncatedAt30Chars() {
+            String longName = "This Is A Very Long Company Name That Exceeds Thirty Characters";
+            List<String> syms  = List.of("TST");
+            List<String> names = List.of(longName);
+            List<Double> wts   = List.of(0.03);
+            Map<String, String[]> det = Map.of("TST", new String[]{"Sector", "Desc."});
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 1, syms, names, wts, det);
+            // substring(0, 29) = chars 0-28 = "This Is A Very Long Company N" (29 chars) + "…"
+            assertThat(sb.toString()).contains("This Is A Very Long Company N…");
+        }
+
+        @Test
+        void totalWeightSummedInFooter() {
+            List<String> syms  = List.of("A", "B", "C");
+            List<String> names = List.of("Alpha", "Beta", "Gamma");
+            List<Double> wts   = List.of(0.10, 0.08, 0.07);
+            Map<String, String[]> det = Map.of(
+                    "A", new String[]{"Tech", "Alpha does tech."},
+                    "B", new String[]{"Finance", "Beta does finance."},
+                    "C", new String[]{"Health", "Gamma does health."});
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 3, syms, names, wts, det);
+            // 10 + 8 + 7 = 25% total
+            assertThat(sb.toString()).contains("25.0% of fund");
+        }
+
+        @Test
+        void rankNumbersAreSequential() {
+            List<String> syms  = List.of("A", "B");
+            List<String> names = List.of("Alpha", "Beta");
+            List<Double> wts   = List.of(0.10, 0.05);
+            Map<String, String[]> det = new HashMap<>();
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 2, syms, names, wts, det);
+            String out = sb.toString();
+            assertThat(out).contains(" 1.");
+            assertThat(out).contains(" 2.");
+        }
+
+        @Test
+        void noDescriptionWhenDetailIsBlank() {
+            List<String> syms  = List.of("TST");
+            List<String> names = List.of("Test Corp");
+            List<Double> wts   = List.of(0.05);
+            // detail exists but desc is blank
+            Map<String, String[]> det = Map.of("TST", new String[]{"Tech", ""});
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 1, syms, names, wts, det);
+            // With no description: section header + separator + holding row + footer = 4 non-blank lines.
+            // With a description there would be 5 (description adds one more non-blank line).
+            long nonBlankLines = sb.toString().lines()
+                    .filter(l -> !l.isBlank()).count();
+            assertThat(nonBlankLines).isEqualTo(4);
+        }
+
+        @Test
+        void topNHeaderMatchesLimit() {
+            List<String> syms  = List.of("A", "B", "C", "D", "E");
+            List<String> names = Collections.nCopies(5, "Corp");
+            List<Double> wts   = Collections.nCopies(5, 0.05);
+            Map<String, String[]> det = new HashMap<>();
+            StringBuilder sb = new StringBuilder();
+            StockTool.renderHoldingsTable(sb, 5, syms, names, wts, det);
+            assertThat(sb.toString()).contains("TOP 5 HOLDINGS");
         }
     }
 }

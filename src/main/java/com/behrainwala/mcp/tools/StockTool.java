@@ -930,7 +930,7 @@ public class StockTool {
 
     // ── stock_review: stock branch ────────────────────────────────────────────
 
-    private void buildStockReview(StringBuilder sb, String symbol, JsonNode data) {
+    void buildStockReview(StringBuilder sb, String symbol, JsonNode data) {
         JsonNode fin    = data.path("financialData");
         JsonNode trend  = data.path("recommendationTrend").path("trend");
         JsonNode hist   = data.path("upgradeDowngradeHistory").path("history");
@@ -1072,18 +1072,74 @@ public class StockTool {
     private void buildEtfReview(StringBuilder sb, String etfSymbol, JsonNode data)
             throws Exception {
 
-        JsonNode fundProfile = data.path("fundProfile");
-        JsonNode topHoldings = data.path("topHoldings");
-        JsonNode price       = data.path("price");
+        renderEtfProfile(sb, data.path("fundProfile"), data.path("topHoldings"),
+                data.path("price"));
 
-        // ── ETF profile ───────────────────────────────────────────────────────
+        JsonNode holdings = data.path("topHoldings").path("holdings");
+        if (holdings.isEmpty()) {
+            sb.append("  Holdings data not available from Yahoo Finance.\n");
+            return;
+        }
+
+        int limit = Math.min(holdings.size(), 10);
+        List<String> syms   = new ArrayList<>();
+        List<String> hNames = new ArrayList<>();
+        List<Double> wts    = new ArrayList<>();
+        for (int i = 0; i < limit; i++) {
+            JsonNode h = holdings.get(i);
+            syms.add(h.path("symbol").asText("").trim().toUpperCase());
+            hNames.add(h.path("holdingName").asText("N/A"));
+            wts.add(h.path("holdingPercent").asDouble(0));
+        }
+
+        // Warm up session before parallel calls
+        if (crumb == null || System.currentTimeMillis() > crumbExpiryMs) refreshSession();
+        Map<String, String[]> details = new ConcurrentHashMap<>();
+        ExecutorService pool = Executors.newFixedThreadPool(Math.min(limit, 4));
+
+        List<Future<?>> futures = new ArrayList<>();
+        for (String sym : syms) {
+            if (sym.isBlank()) continue;
+            futures.add(pool.submit(() -> {
+                try {
+                    String url = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
+                            + sym + "?modules=summaryProfile";
+                    JsonNode res = mapper.readTree(yahooGet(url))
+                            .path("quoteSummary").path("result");
+                    if (!res.isEmpty()) {
+                        JsonNode prof = res.get(0).path("summaryProfile");
+                        details.put(sym, new String[]{
+                            getFmt(prof, "sector"),
+                            twoSentences(prof.path("longBusinessSummary").asText(""))
+                        });
+                    }
+                } catch (Exception ex) {
+                    log.debug("Could not fetch profile for {}: {}", sym, ex.getMessage());
+                }
+            }));
+        }
+
+        pool.shutdown();
+        try {
+            if (!pool.awaitTermination(30, TimeUnit.SECONDS))
+                log.warn("ETF holding description fetch timed out");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        renderHoldingsTable(sb, limit, syms, hNames, wts, details);
+    }
+
+    /** Renders the ETF PROFILE section. Package-private for testing. */
+    static void renderEtfProfile(StringBuilder sb,
+                                  JsonNode fundProfile, JsonNode topHoldings, JsonNode price) {
         double curPrice  = getRaw(price, "regularMarketPrice");
         String category  = getFmt(fundProfile, "categoryName");
         String family    = getFmt(fundProfile, "family");
         String legalType = getFmt(fundProfile, "legalType");
 
-        JsonNode fees     = fundProfile.path("feesExpensesInvestment");
-        double   expRatio = getRaw(fees, "annualReportExpenseRatio");
+        JsonNode fees    = fundProfile.path("feesExpensesInvestment");
+        double expRatio  = getRaw(fees, "annualReportExpenseRatio");
         if (Double.isNaN(expRatio)) expRatio = getRaw(fees, "netExpRatio");
 
         double stockPos = getRaw(topHoldings, "stockPosition");
@@ -1102,15 +1158,14 @@ public class StockTool {
                     expRatio * 100, expRatio * 10_000));
         }
         if (!Double.isNaN(stockPos)) {
-            sb.append(String.format("  Allocation:    %.1f%% stocks",  stockPos * 100));
+            sb.append(String.format("  Allocation:    %.1f%% stocks", stockPos * 100));
             if (!Double.isNaN(bondPos) && bondPos > 0)
                 sb.append(String.format("  /  %.1f%% bonds", bondPos * 100));
             if (!Double.isNaN(cashPos) && cashPos > 0)
-                sb.append(String.format("  /  %.1f%% cash",  cashPos * 100));
+                sb.append(String.format("  /  %.1f%% cash", cashPos * 100));
             sb.append("\n");
         }
 
-        // Blended valuation of the ETF's equity holdings
         JsonNode eqh = topHoldings.path("equityHoldings");
         if (!eqh.isMissingNode() && !eqh.isNull()) {
             double pe  = getRaw(eqh, "priceToEarnings");
@@ -1123,84 +1178,33 @@ public class StockTool {
             }
         }
         sb.append("\n");
+    }
 
-        // ── Top holdings ──────────────────────────────────────────────────────
-        JsonNode holdings = topHoldings.path("holdings");
-        if (holdings.isEmpty()) {
-            sb.append("  Holdings data not available from Yahoo Finance.\n");
-            return;
-        }
-
-        int limit = Math.min(holdings.size(), 10);
-
-        // Collect symbols, names, weights
-        List<String> syms    = new ArrayList<>();
-        List<String> hNames  = new ArrayList<>();
-        List<Double> weights = new ArrayList<>();
-        for (int i = 0; i < limit; i++) {
-            JsonNode h = holdings.get(i);
-            syms.add(h.path("symbol").asText("").trim().toUpperCase());
-            hNames.add(h.path("holdingName").asText("N/A"));
-            weights.add(h.path("holdingPercent").asDouble(0));
-        }
-
-        // Warm up session before parallel calls so crumb is ready
-        if (crumb == null || System.currentTimeMillis() > crumbExpiryMs) refreshSession();
-        Map<String, String[]> details = new ConcurrentHashMap<>();
-        ExecutorService pool = Executors.newFixedThreadPool(Math.min(limit, 4));
-
-        List<Future<?>> futures = new ArrayList<>();
-        for (String sym : syms) {
-            if (sym.isBlank()) continue;
-            futures.add(pool.submit(() -> {
-                try {
-                    String url = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
-                            + sym + "?modules=summaryProfile";
-                    JsonNode res = mapper.readTree(yahooGet(url))
-                            .path("quoteSummary").path("result");
-                    if (!res.isEmpty()) {
-                        JsonNode prof    = res.get(0).path("summaryProfile");
-                        String   sector  = getFmt(prof, "sector");
-                        String   rawDesc = prof.path("longBusinessSummary").asText("");
-                        details.put(sym, new String[]{sector, twoSentences(rawDesc)});
-                    }
-                } catch (Exception ex) {
-                    log.debug("Could not fetch profile for holding {}: {}", sym, ex.getMessage());
-                }
-            }));
-        }
-
-        pool.shutdown();
-        try {
-            if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
-                log.warn("ETF holding description fetch timed out for some holdings");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        // ── Render holdings table ─────────────────────────────────────────────
+    /**
+     * Renders the TOP N HOLDINGS table with pre-fetched details.
+     * details map: symbol → {sector, twoSentenceDesc}. Package-private for testing.
+     */
+    static void renderHoldingsTable(StringBuilder sb, int limit,
+                                     List<String> syms, List<String> hNames,
+                                     List<Double> weights,
+                                     Map<String, String[]> details) {
         sb.append(String.format("  TOP %d HOLDINGS\n", limit));
         sb.append("  ──────────────────────────────────────────────────────────────\n");
         double weightSum = 0;
         for (int i = 0; i < limit; i++) {
-            String sym    = syms.get(i);
-            String hName  = hNames.get(i);
-            double wt     = weights.get(i);
-            weightSum    += wt;
-            String[] det  = details.get(sym);
-            String sector = (det != null && det[0] != null) ? det[0] : "N/A";
-            String desc   = (det != null && det[1] != null) ? det[1] : "";
+            String   sym    = syms.get(i);
+            String   hName  = hNames.get(i);
+            double   wt     = weights.get(i);
+            weightSum += wt;
+            String[] det    = details.get(sym);
+            String   sector = (det != null && det[0] != null) ? det[0] : "N/A";
+            String   desc   = (det != null && det[1] != null) ? det[1] : "";
 
-            // Header line: rank, symbol, name, weight, sector
             if (hName.length() > 30) hName = hName.substring(0, 29) + "…";
             sb.append(String.format("  %2d. %-6s  %-30s  %5.2f%%  %s\n",
                     i + 1, sym, hName, wt * 100, sector));
-
-            // Description (word-wrapped, indented)
-            if (!desc.isBlank()) {
+            if (!desc.isBlank())
                 sb.append(wrapText(desc, 74, "      ")).append("\n");
-            }
             sb.append("\n");
         }
         sb.append(String.format("  Top %d holdings account for %.1f%% of fund\n\n",
