@@ -6,7 +6,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -197,7 +200,30 @@ public class FileSystemTool {
         int limit = (maxChars == null) ? 5000 : maxChars;
 
         try {
-            String content = Files.readString(p, charset);
+            byte[] bytes = Files.readAllBytes(p);
+
+            // Detect a byte-order mark; it overrides the requested charset and is stripped
+            // from the output so the LLM never sees a stray U+FEFF.
+            int bomLen = 0;
+            if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
+                charset = StandardCharsets.UTF_8;
+                bomLen = 3;
+            } else if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+                charset = StandardCharsets.UTF_16LE;
+                bomLen = 2;
+            } else if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+                charset = StandardCharsets.UTF_16BE;
+                bomLen = 2;
+            }
+
+            // Lenient decode: invalid bytes become U+FFFD (replacement char) rather than
+            // throwing MalformedInputException, so the tool never fails on a non-UTF-8 file.
+            CharsetDecoder decoder = charset.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPLACE)
+                    .onUnmappableCharacter(CodingErrorAction.REPLACE);
+            String content = decoder.decode(
+                    ByteBuffer.wrap(bytes, bomLen, bytes.length - bomLen)).toString();
+
             boolean truncated = limit > 0 && content.length() > limit;
             if (truncated) content = content.substring(0, limit);
 

@@ -75,6 +75,57 @@ class FileSystemToolTest {
     }
 
     @Test
+    void readTextFile_invalidUtf8Bytes_doesNotThrow() throws Exception {
+        // 0xE9 ('é' in Latin-1) is not valid standalone UTF-8 — previously this
+        // produced "Input length = 1". Now it must decode leniently, not error.
+        Path file = tempDir.resolve("latin-bytes.txt");
+        Files.write(file, new byte[]{'c', 'a', 'f', (byte) 0xE9, '\n'});
+
+        String result = tool.readTextFile(file.toString(), null, null);
+
+        assertThat(result)
+                .doesNotContain("Error")
+                .contains("caf"); // the bad byte becomes U+FFFD, but no exception
+    }
+
+    @Test
+    void readTextFile_stripsUtf8Bom() throws Exception {
+        Path file = tempDir.resolve("bom.txt");
+        byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] body = "hello".getBytes(StandardCharsets.UTF_8);
+        byte[] all = new byte[bom.length + body.length];
+        System.arraycopy(bom, 0, all, 0, bom.length);
+        System.arraycopy(body, 0, all, bom.length, body.length);
+        Files.write(file, all);
+
+        String result = tool.readTextFile(file.toString(), 0, null);
+
+        String content = result.substring(result.indexOf("─────") + "─────".length()).strip();
+        assertThat(content).isEqualTo("hello");
+        assertThat(content).doesNotContain("﻿");
+    }
+
+    @Test
+    void readTextFile_readsUtf16WithBom() throws Exception {
+        Path file = tempDir.resolve("utf16.txt");
+        // UTF-16LE BOM (FF FE) + "Hi"
+        Files.write(file, "Hi".getBytes(StandardCharsets.UTF_16LE).length == 4
+                ? prepend(new byte[]{(byte) 0xFF, (byte) 0xFE}, "Hi".getBytes(StandardCharsets.UTF_16LE))
+                : new byte[0]);
+
+        String result = tool.readTextFile(file.toString(), 0, null);
+
+        assertThat(result).contains("Hi");
+    }
+
+    private static byte[] prepend(byte[] head, byte[] tail) {
+        byte[] out = new byte[head.length + tail.length];
+        System.arraycopy(head, 0, out, 0, head.length);
+        System.arraycopy(tail, 0, out, head.length, tail.length);
+        return out;
+    }
+
+    @Test
     void readTextFile_unknownEncoding_returnsError() throws Exception {
         Path file = tempDir.resolve("x.txt");
         Files.writeString(file, "data");
