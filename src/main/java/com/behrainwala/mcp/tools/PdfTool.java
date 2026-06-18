@@ -57,7 +57,9 @@ public class PdfTool {
     }
 
     @Tool(name = "pdf_to_text",
-          description = "Extract all text content from a PDF. Accepts a local file path, a URL, or base64-encoded PDF content. "
+          description = "Extract all text content from a binary PDF (.pdf) file. "
+                  + "For plain-text files (.txt/.md/.csv/.log/.json) use read_text_file instead — not this tool. "
+                  + "Accepts a local file path, a URL, or base64-encoded PDF content. "
                   + "For text-based PDFs, uses fast embedded-text extraction. "
                   + "For image-based or scanned PDFs (where no embedded text exists), automatically falls back to "
                   + "Tesseract OCR so that LLMs do not need to spend vision tokens. "

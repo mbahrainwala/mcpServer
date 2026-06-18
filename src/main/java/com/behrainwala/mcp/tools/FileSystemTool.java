@@ -170,10 +170,13 @@ public class FileSystemTool {
     }
 
     @Tool(name = "read_text_file",
-          description = "Read the contents of a plain-text file (.txt, .log, .csv, .md, .json, .xml, .yaml, etc.). "
+          description = "Read, open, load, or cat the raw contents of a plain-text file from disk. "
+                  + "USE THIS for any text file: .txt, .log, .csv, .md, .json, .xml, .yaml, .ini, source code, etc. "
+                  + "Do NOT use pdf_to_text or doc_to_text for these — those are only for binary .pdf / .docx / .doc files. "
                   + "Returns the file text, optionally limited to a character count via maxChars. "
                   + "Use maxChars=0 to read the entire file. Default maxChars=5000 keeps token usage low. "
-                  + "Supports UTF-8 (default) or a custom charset via the encoding param.")
+                  + "Auto-detects UTF-8/UTF-16 BOMs and decodes leniently, so it never fails on odd encodings; "
+                  + "pass an explicit charset via the encoding param (e.g. 'ISO-8859-1') if needed.")
     public String readTextFile(
             @ToolParam(description = "Absolute path to the text file (e.g. 'C:/data/notes.txt')")
             String path,

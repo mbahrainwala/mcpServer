@@ -71,7 +71,8 @@ public class DocumentTool {
     // ── Tool: doc_to_text ─────────────────────────────────────────────────────
 
     @Tool(name = "doc_to_text",
-          description = "Extract all text and structure from a Word document (.docx or .doc). "
+          description = "Extract all text and structure from a binary Word document (.docx or .doc). "
+                  + "For plain-text files (.txt/.md/.csv/.log/.json) use read_text_file instead — not this tool. "
                   + "Returns markdown-formatted output that preserves headings, lists, tables, "
                   + "bold, and italic so the LLM can read the content without spending vision tokens. "
                   + "Accepts a local file path, a URL, or base64-encoded document content (prefixed with 'base64:').")
