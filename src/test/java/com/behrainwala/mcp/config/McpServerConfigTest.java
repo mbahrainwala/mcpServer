@@ -89,7 +89,8 @@ class McpServerConfigTest {
                 mock(AiTextTool.class),
                 mock(EmbeddingTool.class),
                 mock(MarkdownTool.class),
-                mock(PromptTool.class)
+                mock(PromptTool.class),
+                mock(FileSystemTool.class)
         );
 
         assertThat(provider).isNotNull();

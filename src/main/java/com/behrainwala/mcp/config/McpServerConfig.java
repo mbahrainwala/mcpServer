@@ -77,7 +77,9 @@ public class McpServerConfig {
             AiTextTool aiTextTool,
             EmbeddingTool embeddingTool,
             MarkdownTool markdownTool,
-            PromptTool promptTool) {
+            PromptTool promptTool,
+            // File system tools
+            FileSystemTool fileSystemTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
@@ -122,7 +124,8 @@ public class McpServerConfig {
                         aiTextTool,
                         embeddingTool,
                         markdownTool,
-                        promptTool
+                        promptTool,
+                        fileSystemTool
                 )
                 .build();
     }
