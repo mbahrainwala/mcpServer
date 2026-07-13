@@ -50,7 +50,14 @@
       "Bash(Get-Content *)",
       "mcp__behrainwala-mcp__stock_quote",
       "mcp__behrainwala-mcp__web_research",
-      "Bash(mvn -q test -Dtest=FileSystemToolTest)"
+      "Bash(mvn -q test -Dtest=FileSystemToolTest)",
+      "Bash(mvn -q compile)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git add *)",
+      "Bash(git commit -m '@ *)",
+      "Bash(git commit *)",
+      "Bash(grep -E \"Tests run: [0-9]+, Failures.*Skipped: [0-9]+$\")"
     ]
   }
 }

@@ -101,8 +101,9 @@ class MathToolTest {
 
         @Test
         void sin() {
-            String result = tool.calculate("sin(PI / 2)");
-            assertThat(result).contains("1");
+            // Trig is in DEGREES: sin(90) = 1
+            String result = tool.calculate("sin(90)");
+            assertThat(result).contains("Result: 1");
         }
 
         @Test
@@ -542,6 +543,115 @@ class MathToolTest {
         void multipleSpaces() {
             String result = tool.calculate("  2   +   3  ");
             assertThat(result).contains("5");
+        }
+    }
+
+    @Nested
+    class ExtendedSpecFunctions {
+
+        private double eval(String expr) {
+            return new MathTool.ExpressionParser(expr).parse();
+        }
+
+        // ── powers & roots ──
+        @Test void powFunction()  { assertThat(eval("pow(2, 10)")).isEqualTo(1024.0); }
+        @Test void cbrtFunction() { assertThat(eval("cbrt(27)")).isCloseTo(3.0, within(1e-9)); }
+
+        // ── trigonometry in degrees ──
+        @Test void sinDegrees() { assertThat(eval("sin(90)")).isCloseTo(1.0, within(1e-9)); }
+        @Test void cosDegrees() { assertThat(eval("cos(60)")).isCloseTo(0.5, within(1e-9)); }
+        @Test void tanDegrees() { assertThat(eval("tan(45)")).isCloseTo(1.0, within(1e-9)); }
+        @Test void asinDegrees() { assertThat(eval("asin(1)")).isCloseTo(90.0, within(1e-9)); }
+        @Test void acosDegrees() { assertThat(eval("acos(0)")).isCloseTo(90.0, within(1e-9)); }
+        @Test void atanDegrees() { assertThat(eval("atan(1)")).isCloseTo(45.0, within(1e-9)); }
+
+        // ── hyperbolic ──
+        @Test void sinhZero() { assertThat(eval("sinh(0)")).isEqualTo(0.0); }
+        @Test void coshZero() { assertThat(eval("cosh(0)")).isEqualTo(1.0); }
+        @Test void tanhZero() { assertThat(eval("tanh(0)")).isEqualTo(0.0); }
+
+        // ── logarithms (log = base 10, ln = natural) ──
+        @Test void logIsBase10() { assertThat(eval("log(1000)")).isCloseTo(3.0, within(1e-9)); }
+        @Test void lnIsNatural()  { assertThat(eval("ln(e)")).isCloseTo(1.0, within(1e-9)); }
+        @Test void log2Function() { assertThat(eval("log2(8)")).isCloseTo(3.0, within(1e-9)); }
+        @Test void lognFunction() { assertThat(eval("logn(2, 8)")).isCloseTo(3.0, within(1e-9)); }
+
+        // ── rounding helpers ──
+        @Test void truncPositive() { assertThat(eval("trunc(2.7)")).isEqualTo(2.0); }
+        @Test void truncNegative() { assertThat(eval("trunc(-2.7)")).isEqualTo(-2.0); }
+        @Test void signNegative()  { assertThat(eval("sign(-5)")).isEqualTo(-1.0); }
+        @Test void signPositive()  { assertThat(eval("sign(42)")).isEqualTo(1.0); }
+
+        // ── factorial ──
+        @Test void factorialFunction() { assertThat(eval("factorial(5)")).isEqualTo(120.0); }
+        @Test void factorialPostfix()  { assertThat(eval("5!")).isEqualTo(120.0); }
+        @Test void factorialZero()     { assertThat(eval("0!")).isEqualTo(1.0); }
+        @Test void factorialBindsTighterThanPower() {
+            // 3!^2 = (3!)^2 = 36
+            assertThat(eval("3!^2")).isEqualTo(36.0);
+        }
+        @Test void factorialNonInteger() {
+            // 0.5! = gamma(1.5) = sqrt(pi)/2 ≈ 0.886227
+            assertThat(eval("factorial(0.5)")).isCloseTo(0.8862269, within(1e-6));
+        }
+        @Test void factorialNegativeInteger_throws() {
+            assertThatThrownBy(() -> eval("factorial(-3)"))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("negative");
+        }
+
+        // ── constants ──
+        @Test void eLowercaseConstant() { assertThat(eval("e")).isCloseTo(Math.E, within(1e-10)); }
+        @Test void infConstant()        { assertThat(eval("inf")).isEqualTo(Double.POSITIVE_INFINITY); }
+
+        // ── arity validation ──
+        @Test void powWrongArity_throws() {
+            assertThatThrownBy(() -> eval("pow(2)"))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("2 arguments");
+        }
+    }
+
+    @Nested
+    class PreviousResultReference {
+
+        @Test
+        void ansAcrossCalculateCalls() {
+            tool.calculate("6 * 7");                 // ans = 42
+            assertThat(tool.calculate("ans + 1")).contains("Result: 43");
+        }
+
+        @Test
+        void ansWithinBatch() {
+            // second line references the first line's result
+            String result = tool.batchCalculate("10; ans + 5; ans * 2");
+            assertThat(result).contains("15").contains("30");
+        }
+
+        @Test
+        void ansWithoutPreviousResult_isError() {
+            // fresh tool: no prior result yet
+            assertThat(tool.calculate("ans")).containsIgnoringCase("error");
+        }
+
+        @Test
+        void ansViaParserConstructor() {
+            assertThat(new MathTool.ExpressionParser("ans + 1", 41).parse()).isEqualTo(42.0);
+        }
+    }
+
+    @Nested
+    class NumberFormatting {
+
+        @Test
+        void infinityFormatsCleanly() {
+            assertThat(MathTool.formatNumber(Double.POSITIVE_INFINITY)).isEqualTo("Infinity");
+            assertThat(MathTool.formatNumber(Double.NEGATIVE_INFINITY)).isEqualTo("-Infinity");
+        }
+
+        @Test
+        void nanFormatsAsNaN() {
+            assertThat(MathTool.formatNumber(Double.NaN)).isEqualTo("NaN");
         }
     }
 }

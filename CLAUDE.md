@@ -165,6 +165,7 @@ For `fetch_webpage`, the LLM-controllable `maxChars` param defaults to 5000 and 
 | `poi-ooxml` | .docx/.xlsx read/write |
 | `poi-scratchpad` | .doc (legacy Word) |
 | `tesseract-platform` | OCR (self-contained, no install) |
+| `ai.djl:api` + `pytorch-engine` + `pytorch-model-zoo` | Local image object recognition (self-contained; downloads PyTorch + model to `~/.djl.ai/` on first use, then offline) |
 | `commons-csv` | CSV parsing/writing |
 | `snakeyaml` | YAML (transitive via spring-boot-starter) |
 
@@ -204,8 +205,13 @@ Use `batch_calculate` when you need 2+ expressions evaluated.
 ### Time & Conversion (4 tools)
 `get_current_datetime`, `convert_timezone`, `date_difference`, `convert_units`
 
-### Documents (6 tools)
-`pdf_to_text`, `pdf_metadata`, `doc_to_text`, `doc_create`, `doc_edit`, `image_to_text`
+### Documents & Vision (7 tools)
+`pdf_to_text`, `pdf_metadata`, `doc_to_text`, `doc_create`, `doc_edit`, `image_to_text`, `image_recognize_objects`
+
+`image_recognize_objects` (DJL/PyTorch, via `VisionService`) returns coarse object labels + confidence
+(flower/car/dog/etc.) fully offline. It deliberately does **not** do fine-grained ID (species, car
+make/model, breed) — the tool description tells the LLM to use its own vision model for that. Override
+the detection model without a recompile via `-Dmcp.vision.model-url=...`.
 
 ### Excel (9 tools)
 `excel_to_text`, `excel_create`, `excel_edit`, `excel_function_lookup`, `excel_formula_explain`, `excel_formula_build`, `excel_analyze_data`, `excel_chart_recommend`, `excel_conditional_format`, `excel_pivot_guide`, `excel_vba_snippet`, `excel_shortcut_reference`

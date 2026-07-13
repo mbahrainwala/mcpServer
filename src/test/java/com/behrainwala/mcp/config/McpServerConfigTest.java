@@ -90,7 +90,8 @@ class McpServerConfigTest {
                 mock(EmbeddingTool.class),
                 mock(MarkdownTool.class),
                 mock(PromptTool.class),
-                mock(FileSystemTool.class)
+                mock(FileSystemTool.class),
+                mock(ImageRecognitionTool.class)
         );
 
         assertThat(provider).isNotNull();

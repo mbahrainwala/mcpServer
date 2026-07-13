@@ -79,7 +79,9 @@ public class McpServerConfig {
             MarkdownTool markdownTool,
             PromptTool promptTool,
             // File system tools
-            FileSystemTool fileSystemTool) {
+            FileSystemTool fileSystemTool,
+            // Vision tools
+            ImageRecognitionTool imageRecognitionTool) {
 
         return MethodToolCallbackProvider.builder()
                 .toolObjects(
@@ -125,7 +127,8 @@ public class McpServerConfig {
                         embeddingTool,
                         markdownTool,
                         promptTool,
-                        fileSystemTool
+                        fileSystemTool,
+                        imageRecognitionTool
                 )
                 .build();
     }
